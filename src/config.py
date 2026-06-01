@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     # LLM - DouBao (ByteDance)
     doubao_api_key: str
     doubao_base_url: str = "https://ark.cn-beijing.volces.com/api/v3"
-    doubao_model: str
+    doubao_model: str = "doubao-pro-32k"  # Default model, can use: doubao-pro-4k, doubao-pro-32k, doubao-pro-128k, doubao-lite-4k
 
     # Vector DB (Optional - not needed for MVP)
     pinecone_api_key: Optional[str] = None

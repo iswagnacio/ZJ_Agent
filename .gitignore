@@ -70,5 +70,5 @@ temp/
 docker-compose.override.yml
 
 # Application specific
-workplan_generator_system_prompt_v10_2.txt
+uploads/
 uploaded_images/

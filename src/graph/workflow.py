@@ -182,12 +182,15 @@ def create_workflow_graph():
 
         if state["requirements_complete"]:
             return "generator"
+        elif state.get("awaiting_user_input"):
+            # Stop and wait for user to provide input via API
+            return END
         elif state["clarification_round"] >= settings.max_clarification_rounds:
             # Max rounds reached, proceed anyway
             logger.warning("Max clarification rounds reached, proceeding")
             return "generator"
         else:
-            # Wait for user input (stay in clarifier)
+            # Continue clarification
             return "clarifier"
 
     graph.add_conditional_edges(
@@ -235,8 +238,8 @@ def create_workflow_graph():
             logger.info("Restarting from clarifier")
             return "clarifier"
         else:
-            # Still waiting for decision
-            return "user_review"
+            # Still waiting for decision, stop and wait for user input via API
+            return END
 
     graph.add_conditional_edges(
         "user_review",
