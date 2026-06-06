@@ -32,12 +32,13 @@ def create_workflow_graph():
         api_key=settings.doubao_api_key,
         base_url=settings.doubao_base_url,
         model=settings.doubao_model,
+        system_prompt_path="prompts/clarifier_system_prompt.txt",
     )
     generator = GeneratorAgent(
         api_key=settings.doubao_api_key,
         base_url=settings.doubao_base_url,
         model=settings.doubao_model,
-        system_prompt_path="workplan_generator_system_prompt_v10_2.txt",
+        system_prompt_path="prompts/generator_system_prompt.txt",
     )
     reviewer = ReviewerAgent()
 

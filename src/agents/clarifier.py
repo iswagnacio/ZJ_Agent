@@ -20,7 +20,7 @@ class ClarifierAgent:
     to extract complete, unambiguous requirements.
     """
 
-    def __init__(self, api_key: str, base_url: str, model: str):
+    def __init__(self, api_key: str, base_url: str, model: str, system_prompt_path: str = None):
         self.llm = ChatOpenAI(
             model=model,
             openai_api_key=api_key,
@@ -28,73 +28,31 @@ class ClarifierAgent:
             temperature=0.3,
         )
 
-        self.system_prompt = """
-You are an expert microscopy image analysis consultant specializing in workplan generation.
+        # Load system prompt from file or use default
+        if system_prompt_path:
+            try:
+                with open(system_prompt_path, "r", encoding="utf-8") as f:
+                    self.system_prompt = f.read()
+                logger.info(f"Loaded Clarifier system prompt from {system_prompt_path}")
+            except FileNotFoundError:
+                logger.warning(f"System prompt file not found: {system_prompt_path}, using default")
+                self.system_prompt = self._get_default_prompt()
+        else:
+            logger.info("Using default Clarifier system prompt")
+            self.system_prompt = self._get_default_prompt()
+
+    def _get_default_prompt(self) -> str:
+        """Default system prompt if no file provided."""
+        return """You are an expert microscopy image analysis consultant.
+
 Your job is to understand the user's analysis needs by:
 1. Analyzing the microscope image they provide
-2. Asking specific, targeted questions to clarify ambiguities
-3. Building a complete requirement specification with technical parameters
-
-CRITICAL CLARIFICATION TOPICS (ask about these systematically):
-
-1. IMAGE TYPE & STAINING:
-   - Is this fluorescence or brightfield (H&E, IHC, DAB)?
-   - For H&E staining: Which structures need detection? (nuclei=hematoxylin/purple, cytoplasm=eosin/pink)
-   - For fluorescence: What does each channel represent?
-
-2. CHANNEL SELECTION FOR SEGMENTATION:
-   - CRITICAL: Which channel/color should be used for object segmentation?
-   - For H&E: Should detection use the nucleus channel (purple) or cytoplasm channel (pink)?
-   - This choice significantly impacts segmentation accuracy!
-
-3. SEGMENTATION MODEL & PARAMETERS:
-   - Does the user have a preferred segmentation model? (e.g., Cellpose, StarDist, Watershed)
-   - If using Cellpose: Do they know the model name? (e.g., "cyto", "nuclei", custom model)
-   - Do they have specific Cellpose parameters?
-     * Diameter (in pixels)
-     * flowThreshold (typically 0.4-0.9)
-     * cellprobThreshold (typically -6.0 to 6.0)
-
-4. OBJECT DETECTION & FILTERING:
-   - What objects need to be detected? (cells, nuclei, vacuoles, regions, etc.)
-   - Should border/edge objects be excluded?
-   - Size constraints? (min/max area, diameter ranges)
-   - Any shape constraints? (circularity, aspect ratio)
-
-5. MEASUREMENTS & FEATURES:
-   - What metrics are needed? (COUNT, AREA, MEAN intensity, etc.)
-   - Should multiple features be measured?
-     * Intensity features: MEAN, MAX, MIN, SUM
-     * Shape features: AREA, CIRCULARITY, PERIMETER, SOLIDITY
-     * These help with filtering and quality control
-
-6. GROUPING & CLASSIFICATION:
-   - Are objects grouped by ranges? (e.g., by size, by intensity)
-   - Multiple target groups with different criteria?
-
-7. OUTPUT REQUIREMENTS:
-   - What final results? (count values, measurements table, visualizations)
-   - Specific output format?
-
-QUESTIONING STRATEGY:
-- Ask questions ONE topic at a time to avoid overwhelming the user
-- Be specific and reference what you see in the image
-- For H&E images: ALWAYS clarify which channel for segmentation (critical!)
-- If user mentions a specific model (like "zhijing_vacuoles"), ask about known parameters
-- Build from high-level (what to detect) to low-level (specific parameters)
+2. Asking high-level, accessible questions (NOT technical parameters)
+3. Building a complete requirement specification
 
 COMPLETION CRITERIA:
 When you have all necessary information, respond with JSON:
-  {"status": "complete", "requirements": {
-    "staining_type": "...",
-    "segmentation_channel": "...",
-    "segmentation_model": "...",
-    "model_parameters": {...},
-    "detection_targets": {...},
-    "measurements": [...],
-    "filtering_criteria": {...},
-    "output_format": "..."
-  }}
+  {"status": "complete", "requirements": {...}}
 
 When you need more information, respond with JSON:
   {"status": "need_clarification", "questions": ["your specific question here"]}

@@ -1,0 +1,29 @@
+{
+  "build_time": "2026-06-03T10:45:20.659921",
+  "embedding_model": "text-embedding-3-small",
+  "num_source_files": 11,
+  "num_chunks": 95,
+  "file_hashes": {
+    "Put_File_API_v10.md": "ed7e06e19d2f3e136b26735eb91a1e9e",
+    "Formula_API_v10.md": "6c82166453ab17f4deceef8aa095e1d4",
+    "Segment_ROI_API_v10.md": "6cf86d3c3282747f2be9ffca4337c523",
+    "Get_Target_API_v10.md": "be0c1ef1865dbd2fb4e7f650fcc70f7b",
+    "README.md": "de8c59d9b675f1e868c32cbe3e1db92c",
+    "Input_Interpretation_API_v11.md": "355eba01780066d8d3516da65a6486d2",
+    "Measure_ROI_API_v10.md": "97936b043f6411c45172a1d3ef887dba",
+    "Create_Target_API_v10.md": "47d3dbe1cff9cf2d5ef8a9ee7e0d1cfb",
+    "Pic_Split_API_v10.md": "ad08042e6353b9c1cf957cab49b1abb8",
+    "Get_File_API_v10.md": "46ebb4a0148e54225bf4d6e5b057d509",
+    "ROI_Render_API_v10.md": "4404c56fe3b7c664f51cda0757890e0a"
+  },
+  "doc_type_distribution": {
+    "api": 95
+  },
+  "avg_chunk_tokens": 271.11578947368423,
+  "chunker_config": {
+    "target_chunk_size": 450,
+    "max_chunk_size": 800,
+    "min_chunk_size": 100,
+    "overlap_size": 60
+  }
+}
