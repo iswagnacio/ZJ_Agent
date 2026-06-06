@@ -31,7 +31,7 @@ async def test_cellpose_workplan():
 
     # Initialize generator
     generator = GeneratorAgent(
-        api_key="ccc1b71a-4939-4061-b2ff-7473986f773b",  # Replace with real key
+        api_key="placement",  # Replace with real key
         base_url="https://ark.cn-beijing.volces.com/api/v3",
         model="ep-20260602014208-2k2k7",
         enable_rag=True  # Enable RAG
