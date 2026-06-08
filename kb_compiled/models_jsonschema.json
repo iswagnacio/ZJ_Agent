@@ -1,0 +1,1045 @@
+{
+  "Create_Target_API_v10": {
+    "stage": "target",
+    "discriminators": {
+      "operation": [
+        "bindSegmentRoi",
+        "bindMeasureRoi",
+        "bindExistingRoi"
+      ],
+      "sourceType": [
+        "segment_roi",
+        "measure_roi",
+        "existing_roi",
+        "target_roi_variant"
+      ]
+    },
+    "groups": {
+      "请求参数": {
+        "properties": {
+          "sessionId": {
+            "title": "Sessionid",
+            "type": "string"
+          },
+          "workplanId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Workplanid"
+          },
+          "stepId": {
+            "title": "Stepid",
+            "type": "string"
+          },
+          "operation": {
+            "enum": [
+              "bindSegmentRoi",
+              "bindMeasureRoi",
+              "bindExistingRoi"
+            ],
+            "title": "Operation",
+            "type": "string"
+          },
+          "sourceType": {
+            "anyOf": [
+              {
+                "enum": [
+                  "segment_roi",
+                  "measure_roi",
+                  "existing_roi",
+                  "target_roi_variant"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Sourcetype"
+          },
+          "sourceSegmentStepId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Sourcesegmentstepid"
+          },
+          "sourceMeasureStepId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Sourcemeasurestepid"
+          },
+          "sourceRoiResourceUuid": {
+            "title": "Sourceroiresourceuuid",
+            "type": "string"
+          },
+          "measureTableResourceUuid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Measuretableresourceuuid"
+          },
+          "targetName": {
+            "title": "Targetname",
+            "type": "string"
+          },
+          "targetShowName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Targetshowname"
+          },
+          "segmentRoiParams": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Segmentroiparams"
+          },
+          "measureRoiParams": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Measureroiparams"
+          },
+          "roiRenderParams": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Roirenderparams"
+          },
+          "variantStrategy": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Variantstrategy"
+          },
+          "outputOptions": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Outputoptions"
+          }
+        },
+        "required": [
+          "sessionId",
+          "stepId",
+          "operation",
+          "sourceRoiResourceUuid",
+          "targetName"
+        ],
+        "title": "CreateTarget",
+        "type": "object"
+      }
+    }
+  },
+  "Formula_API_v10": {
+    "stage": "calculate",
+    "discriminators": {},
+    "groups": {
+      "请求参数": {
+        "properties": {
+          "sessionId": {
+            "title": "Sessionid",
+            "type": "string"
+          },
+          "workplanId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Workplanid"
+          },
+          "stepId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Stepid"
+          },
+          "operation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Operation"
+          },
+          "targetName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Targetname"
+          },
+          "formulaPlan": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Formulaplan"
+          },
+          "reportRequirements": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Reportrequirements"
+          },
+          "knownContext": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Knowncontext"
+          },
+          "inputResources": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Inputresources"
+          },
+          "params": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Params"
+          },
+          "outputOptions": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Outputoptions"
+          }
+        },
+        "required": [
+          "sessionId"
+        ],
+        "title": "Formula",
+        "type": "object"
+      }
+    }
+  },
+  "Get_File_API_v10": {
+    "stage": "shared",
+    "discriminators": {},
+    "groups": {
+      "请求参数": {
+        "properties": {
+          "sessionId": {
+            "title": "Sessionid",
+            "type": "string"
+          },
+          "storedFilename": {
+            "title": "Storedfilename",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sessionId",
+          "storedFilename"
+        ],
+        "title": "GetFile",
+        "type": "object"
+      }
+    }
+  },
+  "Get_Target_API_v10": {
+    "stage": "shared",
+    "discriminators": {},
+    "groups": {
+      "GET": {
+        "properties": {
+          "sessionId": {
+            "title": "Sessionid",
+            "type": "string"
+          },
+          "targetName": {
+            "title": "Targetname",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sessionId",
+          "targetName"
+        ],
+        "title": "GetTargetGET",
+        "type": "object"
+      },
+      "POST": {
+        "properties": {
+          "sessionId": {
+            "title": "Sessionid",
+            "type": "string"
+          },
+          "targetName": {
+            "title": "Targetname",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sessionId",
+          "targetName"
+        ],
+        "title": "GetTargetPOST",
+        "type": "object"
+      }
+    }
+  },
+  "Measure_ROI_API_v10": {
+    "stage": "measure",
+    "discriminators": {
+      "operation": [
+        "measure_existing",
+        "measureAndFilterRoi"
+      ]
+    },
+    "groups": {
+      "通用请求参数": {
+        "properties": {
+          "sessionId": {
+            "title": "Sessionid",
+            "type": "string"
+          },
+          "workplanId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Workplanid"
+          },
+          "stepId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Stepid"
+          },
+          "targetName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Targetname"
+          },
+          "operation": {
+            "enum": [
+              "measure_existing",
+              "measureAndFilterRoi"
+            ],
+            "title": "Operation",
+            "type": "string"
+          },
+          "inputResources": {
+            "additionalProperties": true,
+            "title": "Inputresources",
+            "type": "object"
+          },
+          "params": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Params"
+          },
+          "filterRules": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Filterrules"
+          },
+          "roiRenderParams": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Roirenderparams"
+          },
+          "outputOptions": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Outputoptions"
+          }
+        },
+        "required": [
+          "sessionId",
+          "operation",
+          "inputResources"
+        ],
+        "title": "MeasureROI",
+        "type": "object"
+      }
+    }
+  },
+  "Pic_Split_API_v10": {
+    "stage": "deconvolve",
+    "discriminators": {
+      "splitMethod": [
+        "rgb_split",
+        "color_deconvolution"
+      ]
+    },
+    "groups": {
+      "请求参数": {
+        "$defs": {
+          "PicSplitInputImage": {
+            "properties": {
+              "storedFilename": {
+                "title": "Storedfilename",
+                "type": "string"
+              },
+              "originalFilename": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Originalfilename"
+              }
+            },
+            "required": [
+              "storedFilename"
+            ],
+            "title": "PicSplitInputImage",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "sessionId": {
+            "title": "Sessionid",
+            "type": "string"
+          },
+          "inputImage": {
+            "$ref": "#/$defs/PicSplitInputImage"
+          },
+          "splitMethod": {
+            "enum": [
+              "rgb_split",
+              "color_deconvolution"
+            ],
+            "title": "Splitmethod",
+            "type": "string"
+          },
+          "colorDeconvParams": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Colordeconvparams"
+          },
+          "outputOptions": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Outputoptions"
+          }
+        },
+        "required": [
+          "sessionId",
+          "inputImage",
+          "splitMethod"
+        ],
+        "title": "PicSplit",
+        "type": "object"
+      }
+    }
+  },
+  "Put_File_API_v10": {
+    "stage": "shared",
+    "discriminators": {},
+    "groups": {
+      "请求参数": {
+        "properties": {
+          "sessionId": {
+            "title": "Sessionid",
+            "type": "string"
+          },
+          "originalFilename": {
+            "title": "Originalfilename",
+            "type": "string"
+          },
+          "fileBase64": {
+            "title": "Filebase64",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sessionId",
+          "originalFilename",
+          "fileBase64"
+        ],
+        "title": "PutFile",
+        "type": "object"
+      }
+    }
+  },
+  "ROI_Render_API_v10": {
+    "stage": "render",
+    "discriminators": {},
+    "groups": {
+      "请求参数": {
+        "properties": {
+          "sessionId": {
+            "title": "Sessionid",
+            "type": "string"
+          },
+          "roiResourceUuid": {
+            "title": "Roiresourceuuid",
+            "type": "string"
+          },
+          "renderImageResourceUuid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Renderimageresourceuuid"
+          },
+          "renderImageBase64": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Renderimagebase64"
+          },
+          "roiRenderParams": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Roirenderparams"
+          },
+          "outputOptions": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Outputoptions"
+          }
+        },
+        "required": [
+          "sessionId",
+          "roiResourceUuid"
+        ],
+        "title": "ROIRender",
+        "type": "object"
+      }
+    }
+  },
+  "Segment_ROI_API_v10": {
+    "stage": "segment",
+    "discriminators": {
+      "segmentationMethod": [
+        "threshold",
+        "cellpose",
+        "weka"
+      ],
+      "operation": [
+        "run_segmentation",
+        "postprocess_binary_and_analyze",
+        "analyze_particles"
+      ]
+    },
+    "groups": {
+      "通用请求参数": {
+        "properties": {
+          "sessionId": {
+            "title": "Sessionid",
+            "type": "string"
+          },
+          "workplanId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Workplanid"
+          },
+          "segmentationMethod": {
+            "enum": [
+              "threshold",
+              "cellpose",
+              "weka"
+            ],
+            "title": "Segmentationmethod",
+            "type": "string"
+          },
+          "operation": {
+            "anyOf": [
+              {
+                "enum": [
+                  "run_segmentation",
+                  "postprocess_binary_and_analyze",
+                  "analyze_particles"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Operation"
+          },
+          "inputResources": {
+            "additionalProperties": true,
+            "title": "Inputresources",
+            "type": "object"
+          },
+          "params": {
+            "additionalProperties": true,
+            "title": "Params",
+            "type": "object"
+          }
+        },
+        "required": [
+          "sessionId",
+          "segmentationMethod",
+          "inputResources",
+          "params"
+        ],
+        "title": "SegmentROI",
+        "type": "object"
+      },
+      "cellpose:run_segmentation": {
+        "$defs": {
+          "SegmentROICellposeRunSegmentationCellposeParamsCellposeParams": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "const": "zhijing_if_nuclei",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Model"
+              },
+              "diameter": {
+                "title": "Diameter",
+                "type": "number"
+              },
+              "flowThreshold": {
+                "$ref": "#/$defs/SegmentROICellposeRunSegmentationCellposeParamsFlowThresholdFlowThreshold"
+              },
+              "cellprobThreshold": {
+                "$ref": "#/$defs/SegmentROICellposeRunSegmentationCellposeParamsCellprobThresholdCellprobThreshold"
+              }
+            },
+            "required": [
+              "diameter",
+              "flowThreshold",
+              "cellprobThreshold"
+            ],
+            "title": "SegmentROICellposeRunSegmentationCellposeParamsCellposeParams",
+            "type": "object"
+          },
+          "SegmentROICellposeRunSegmentationCellposeParamsCellprobThresholdCellprobThreshold": {
+            "properties": {
+              "min": {
+                "title": "Min",
+                "type": "number"
+              },
+              "max": {
+                "title": "Max",
+                "type": "number"
+              }
+            },
+            "required": [
+              "min",
+              "max"
+            ],
+            "title": "SegmentROICellposeRunSegmentationCellposeParamsCellprobThresholdCellprobThreshold",
+            "type": "object"
+          },
+          "SegmentROICellposeRunSegmentationCellposeParamsFlowThresholdFlowThreshold": {
+            "properties": {
+              "min": {
+                "title": "Min",
+                "type": "number"
+              },
+              "max": {
+                "title": "Max",
+                "type": "number"
+              }
+            },
+            "required": [
+              "min",
+              "max"
+            ],
+            "title": "SegmentROICellposeRunSegmentationCellposeParamsFlowThresholdFlowThreshold",
+            "type": "object"
+          },
+          "SegmentROICellposeRunSegmentationInputResources": {
+            "properties": {
+              "sourceImageResourceUuid": {
+                "title": "Sourceimageresourceuuid",
+                "type": "string"
+              }
+            },
+            "required": [
+              "sourceImageResourceUuid"
+            ],
+            "title": "SegmentROICellposeRunSegmentationInputResources",
+            "type": "object"
+          },
+          "SegmentROICellposeRunSegmentationOutputOptions": {
+            "properties": {
+              "returnRoiZip": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Returnroizip"
+              }
+            },
+            "title": "SegmentROICellposeRunSegmentationOutputOptions",
+            "type": "object"
+          },
+          "SegmentROICellposeRunSegmentationParams": {
+            "properties": {
+              "cellposeParams": {
+                "$ref": "#/$defs/SegmentROICellposeRunSegmentationCellposeParamsCellposeParams"
+              }
+            },
+            "required": [
+              "cellposeParams"
+            ],
+            "title": "SegmentROICellposeRunSegmentationParams",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "inputResources": {
+            "$ref": "#/$defs/SegmentROICellposeRunSegmentationInputResources"
+          },
+          "params": {
+            "$ref": "#/$defs/SegmentROICellposeRunSegmentationParams"
+          },
+          "outputOptions": {
+            "$ref": "#/$defs/SegmentROICellposeRunSegmentationOutputOptions"
+          }
+        },
+        "required": [
+          "inputResources",
+          "params",
+          "outputOptions"
+        ],
+        "title": "SegmentROICellposeRunSegmentation",
+        "type": "object"
+      },
+      "threshold:analyze_particles": {
+        "$defs": {
+          "SegmentROIThresholdAnalyzeParticlesAnalyzeParticlesParamsAnalyzeParticlesParams": {
+            "properties": {
+              "sizeMin": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 20.0,
+                "title": "Sizemin"
+              },
+              "sizeMax": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 2000.0,
+                "title": "Sizemax"
+              },
+              "circularityMin": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 0.2,
+                "title": "Circularitymin"
+              },
+              "excludeOnEdges": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Excludeonedges"
+              }
+            },
+            "title": "SegmentROIThresholdAnalyzeParticlesAnalyzeParticlesParamsAnalyzeParticlesParams",
+            "type": "object"
+          },
+          "SegmentROIThresholdAnalyzeParticlesInputResources": {
+            "properties": {
+              "binaryImageResourceUuid": {
+                "title": "Binaryimageresourceuuid",
+                "type": "string"
+              }
+            },
+            "required": [
+              "binaryImageResourceUuid"
+            ],
+            "title": "SegmentROIThresholdAnalyzeParticlesInputResources",
+            "type": "object"
+          },
+          "SegmentROIThresholdAnalyzeParticlesParams": {
+            "properties": {
+              "analyzeParticlesParams": {
+                "$ref": "#/$defs/SegmentROIThresholdAnalyzeParticlesAnalyzeParticlesParamsAnalyzeParticlesParams"
+              }
+            },
+            "required": [
+              "analyzeParticlesParams"
+            ],
+            "title": "SegmentROIThresholdAnalyzeParticlesParams",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "inputResources": {
+            "$ref": "#/$defs/SegmentROIThresholdAnalyzeParticlesInputResources"
+          },
+          "params": {
+            "$ref": "#/$defs/SegmentROIThresholdAnalyzeParticlesParams"
+          }
+        },
+        "required": [
+          "inputResources",
+          "params"
+        ],
+        "title": "SegmentROIThresholdAnalyzeParticles",
+        "type": "object"
+      }
+    }
+  }
+}
