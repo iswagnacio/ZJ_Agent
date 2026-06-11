@@ -1,15 +1,28 @@
-"""LangGraph workflow definition for three-agent system."""
+"""
+LangGraph workflow (v11) - thin layer over src/core/.
 
+Nodes are 2-4 line wrappers that call src/core/ functions.
+The graph owns only control flow, routing, and checkpointing.
+"""
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
 from typing import Dict, Any
+from pathlib import Path
 import logging
 
 from ..state import WorkplanState
-from ..agents.clarifier import ClarifierAgent
-from ..agents.generator import GeneratorAgent
-from ..agents.reviewer import ReviewerAgent
 from ..config import get_settings
+from ..core import (
+    clarifier_turn,
+    build_initial_history,
+    generate_workplan,
+    review_workplan,
+    load_context_spec,
+    load_examples,
+    load_models_schema,
+    create_vision_client,
+    create_text_client,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -23,258 +36,239 @@ except ImportError:
 
 
 def create_workflow_graph():
-    """Create the three-agent workflow graph."""
+    """Create the three-agent workflow graph (v11 - over src/core/)."""
 
     settings = get_settings()
 
-    # Initialize agents with DouBao
-    clarifier = ClarifierAgent(
-        api_key=settings.doubao_api_key,
-        base_url=settings.doubao_base_url,
-        model=settings.doubao_model,
-        system_prompt_path="prompts/clarifier_system_prompt.txt",
-    )
-    generator = GeneratorAgent(
-        api_key=settings.doubao_api_key,
-        base_url=settings.doubao_base_url,
-        model=settings.doubao_model,
-        system_prompt_path="prompts/generator_system_prompt.txt",
-    )
-    reviewer = ReviewerAgent()
+    # Load prompts and knowledge base once
+    clarifier_prompt = Path("prompts/clarifier_system_prompt.md").read_text(encoding="utf-8")
+    generator_prompt = Path("prompts/generator_system_prompt.md").read_text(encoding="utf-8")
+    api_spec = load_context_spec()
+    examples = load_examples()
 
-    logger.info("Agents initialized")
+    # Inject KB context into clarifier prompt
+    clarifier_system = clarifier_prompt.replace("{{KB_CONTEXT}}", api_spec)
 
-    # ========== Node Definitions ==========
+    # Create LLM clients
+    clarifier_client, clarifier_model = create_vision_client()
+    generator_client, generator_model = create_text_client()
 
-    async def clarifier_node(state: WorkplanState) -> Dict[str, Any]:
-        """Agent 1: Clarifier Node"""
+    logger.info("Workflow initialized with src/core/ modules")
 
-        logger.info(
-            f"Clarifier node - Round {state['clarification_round']}"
-        )
+    # ========== Node Definitions (thin wrappers) ==========
 
-        try:
-            # First interaction
-            if state["clarification_round"] == 0:
-                result = await clarifier.analyze_initial_input(
-                    state["image_url"], state["initial_description"]
-                )
-            else:
-                # Process user response
-                result = await clarifier.process_user_response(
-                    state["conversation_history"], state.get("user_response", "")
-                )
+    def clarifier_node(state: WorkplanState) -> Dict[str, Any]:
+        """Clarifier node - one turn, updates history."""
+        logger.info(f"Clarifier node - Round {state['clarification_round']}")
 
-            updates = {"clarification_round": state["clarification_round"] + 1}
-
-            if result["status"] == "complete":
-                # Requirements complete
-                requirements = result.get("requirements") or clarifier.extract_requirements(
-                    state["conversation_history"]
-                )
-                updates.update(
-                    {
-                        "requirements_complete": True,
-                        "requirements": requirements,
-                        "awaiting_user_input": False,
-                    }
-                )
-                logger.info("Requirements complete")
-            else:
-                # Need more info
-                updates.update(
-                    {
-                        "requirements_complete": False,
-                        "awaiting_user_input": True,
-                        "user_input_type": "clarification",
-                        "conversation_history": state["conversation_history"]
-                        + [
-                            {
-                                "agent_message": result["questions"][0],
-                                "user_response": state.get("user_response"),
-                            }
-                        ],
-                    }
-                )
-                logger.info("Awaiting user clarification")
-
-            return updates
-
-        except Exception as e:
-            logger.error(f"Clarifier node error: {e}")
-            return {"error": str(e)}
-
-    async def generator_node(state: WorkplanState) -> Dict[str, Any]:
-        """Agent 2: Generator Node"""
-
-        logger.info(
-            f"Generator node - Attempt {state['generation_attempts'] + 1}"
-        )
-
-        try:
-            workplan = await generator.generate_workplan(
-                state["requirements"], state.get("generation_feedback")
+        # Build or get history
+        if state["clarification_round"] == 0:
+            # First turn: build initial history with image
+            history = build_initial_history(
+                image_path=state["image_url"],
+                request=state["initial_request"],
+                system_prompt=clarifier_system,
             )
+        else:
+            # Subsequent turns: append user response
+            history = state["clarifier_history"].copy()
+            if state.get("user_response"):
+                history.append({"role": "user", "content": state["user_response"]})
 
+        # Call clarifier_turn
+        turn = clarifier_turn(
+            history=history,
+            system_prompt=clarifier_system,
+            client=clarifier_client,
+            model=clarifier_model,
+        )
+
+        # Update history with assistant's response
+        history.append({"role": "assistant", "content": turn.assistant_text})
+
+        # Prepare updates
+        updates = {
+            "clarifier_history": history,
+            "clarification_round": state["clarification_round"] + 1,
+            "messages": [{"role": "clarifier", "content": turn.assistant_text}],
+        }
+
+        if turn.ready:
+            # Brief is ready
+            updates.update({
+                "brief_ready": True,
+                "task_brief": turn.brief,
+                "awaiting_user_input": False,
+            })
+            logger.info("Task brief ready")
+        else:
+            # Need user input
+            updates.update({
+                "brief_ready": False,
+                "awaiting_user_input": True,
+                "user_input_type": "clarification",
+            })
+            logger.info("Awaiting user clarification")
+
+        return updates
+
+    def generator_node(state: WorkplanState) -> Dict[str, Any]:
+        """Generator node - calls generate_workplan."""
+        logger.info(f"Generator node - Attempt {state['generation_attempts'] + 1}")
+
+        workplan, error, raw = generate_workplan(
+            brief=state["task_brief"],
+            request=state["initial_request"],
+            system_prompt=generator_prompt,
+            api_spec=api_spec,
+            examples=examples,
+            client=generator_client,
+            model=generator_model,
+        )
+
+        return {
+            "generation_attempts": state["generation_attempts"] + 1,
+            "current_workplan": workplan,
+            "generation_error": error,
+            "generation_raw": raw,
+            "messages": [{"role": "generator", "content": f"Generated workplan (valid={workplan is not None})"}],
+        }
+
+    def reviewer_node(state: WorkplanState) -> Dict[str, Any]:
+        """Reviewer node - calls review_workplan."""
+        logger.info(f"Reviewer node - Iteration {state['review_iterations'] + 1}")
+
+        if not state["current_workplan"]:
+            # No workplan to review
             return {
-                "current_workplan": workplan,
-                "generation_attempts": state["generation_attempts"] + 1,
-                "generation_feedback": None,  # Clear feedback
-            }
-
-        except Exception as e:
-            logger.error(f"Generator node error: {e}")
-            return {"error": str(e)}
-
-    async def reviewer_node(state: WorkplanState) -> Dict[str, Any]:
-        """Agent 3: Reviewer Node"""
-
-        logger.info(
-            f"Reviewer node - Iteration {state['review_iterations'] + 1}"
-        )
-
-        try:
-            review = await reviewer.review_workplan(
-                state["current_workplan"], state["requirements"]
-            )
-
-            updates = {
-                "review_result": review,
                 "review_iterations": state["review_iterations"] + 1,
+                "review_result": {"status": "reject", "errors": [{"message": "No workplan to review"}], "warnings": []},
             }
 
-            # If rejected, prepare feedback for generator
-            if review["status"] == "reject":
-                updates["generation_feedback"] = {
-                    "critical_issues": review["critical_issues"],
-                    "warnings": review["warnings"],
-                }
+        # Load models schema
+        try:
+            models_schema = load_models_schema()
+        except FileNotFoundError:
+            models_schema = None
 
-            return updates
+        # Review
+        review = review_workplan(state["current_workplan"], models_schema)
 
-        except Exception as e:
-            logger.error(f"Reviewer node error: {e}")
-            return {"error": str(e)}
+        # Serialize Review dataclass to dict
+        review_dict = {
+            "status": review.status,
+            "errors": [{"severity": e.severity, "location": e.location, "message": e.message, "code": e.code} for e in review.errors],
+            "warnings": [{"severity": w.severity, "location": w.location, "message": w.message, "code": w.code} for w in review.warnings],
+        }
+
+        return {
+            "review_iterations": state["review_iterations"] + 1,
+            "review_result": review_dict,
+            "messages": [{"role": "reviewer", "content": f"Review {review.status}: {len(review.errors)} errors, {len(review.warnings)} warnings"}],
+        }
 
     def user_review_node(state: WorkplanState) -> Dict[str, Any]:
-        """Wait for user decision"""
-        logger.info("User review node - awaiting decision")
-        return {"awaiting_user_input": True, "user_input_type": "decision"}
+        """User review - waits for user decision."""
+        logger.info("User review node")
 
-    # ========== Build Graph ==========
+        return {
+            "awaiting_user_input": True,
+            "user_input_type": "decision",
+            "messages": [{"role": "system", "content": "Awaiting user decision (accept/restart_generator/restart_clarifier)"}],
+        }
 
-    graph = StateGraph(WorkplanState)
+    def finalize_node(state: WorkplanState) -> Dict[str, Any]:
+        """Finalize - save workplan."""
+        logger.info("Finalize node")
 
-    # Add nodes
-    graph.add_node("clarifier", clarifier_node)
-    graph.add_node("generator", generator_node)
-    graph.add_node("reviewer", reviewer_node)
-    graph.add_node("user_review", user_review_node)
+        return {
+            "final_workplan": state["current_workplan"],
+            "awaiting_user_input": False,
+            "messages": [{"role": "system", "content": "Workplan finalized"}],
+        }
 
-    # Set entry point
-    graph.set_entry_point("clarifier")
-
-    # ========== Conditional Edges ==========
+    # ========== Routing Functions ==========
 
     def clarifier_router(state: WorkplanState) -> str:
-        """Route from clarifier based on state"""
-        if state.get("error"):
-            return END
-
-        if state["requirements_complete"]:
+        """Route after clarifier."""
+        if state.get("awaiting_user_input"):
+            return END  # Pause for user input
+        if state.get("brief_ready"):
             return "generator"
-        elif state.get("awaiting_user_input"):
-            # Stop and wait for user to provide input via API
+        if state["clarification_round"] >= settings.max_clarification_rounds:
+            logger.warning("Max clarification rounds reached")
             return END
-        elif state["clarification_round"] >= settings.max_clarification_rounds:
-            # Max rounds reached, proceed anyway
-            logger.warning("Max clarification rounds reached, proceeding")
-            return "generator"
-        else:
-            # Continue clarification
-            return "clarifier"
+        return "clarifier"  # Loop
 
-    graph.add_conditional_edges(
-        "clarifier", clarifier_router, {"clarifier": "clarifier", "generator": "generator", END: END}
-    )
-
-    # Generator -> Reviewer (always)
-    graph.add_edge("generator", "reviewer")
+    def generator_router(state: WorkplanState) -> str:
+        """Route after generator."""
+        if state.get("generation_error"):
+            # Generation failed
+            if state["generation_attempts"] >= 3:
+                logger.error("Max generation attempts reached")
+                return END
+            return "generator"  # Retry
+        return "reviewer"
 
     def reviewer_router(state: WorkplanState) -> str:
-        """Route from reviewer based on review result"""
-        if state.get("error"):
-            return END
-
+        """Route after reviewer."""
         review = state.get("review_result", {})
 
         if review.get("status") == "accept":
             return "user_review"
-        elif state["review_iterations"] >= settings.max_review_iterations:
-            # Max iterations, escalate to user
+
+        # Reject - decide whether to retry or escalate
+        if state["review_iterations"] >= settings.max_review_iterations:
             logger.warning("Max review iterations reached, escalating to user")
             return "user_review"
-        else:
-            # Try again
-            logger.info("Workplan rejected, regenerating")
-            return "generator"
 
-    graph.add_conditional_edges(
-        "reviewer",
-        reviewer_router,
-        {"generator": "generator", "user_review": "user_review", END: END},
-    )
+        # Retry generator with feedback
+        return "generator"
 
     def user_decision_router(state: WorkplanState) -> str:
-        """Route from user review based on decision"""
+        """Route after user decision."""
         decision = state.get("user_decision")
 
         if decision == "accept":
-            logger.info("User accepted workplan")
-            return END
-        elif decision == "restart_agent2":
-            logger.info("Restarting from generator")
+            return "finalize"
+        elif decision == "restart_generator":
             return "generator"
-        elif decision == "restart_agent1":
-            logger.info("Restarting from clarifier")
+        elif decision == "restart_clarifier":
             return "clarifier"
         else:
-            # Still waiting for decision, stop and wait for user input via API
-            return END
+            return END  # Pause for user input
 
-    graph.add_conditional_edges(
-        "user_review",
-        user_decision_router,
-        {
-            "generator": "generator",
-            "clarifier": "clarifier",
-            "user_review": "user_review",
-            END: END,
-        },
-    )
+    # ========== Build Graph ==========
 
-    # ========== Compile with Checkpointing ==========
+    workflow = StateGraph(WorkplanState)
 
+    # Add nodes
+    workflow.add_node("clarifier", clarifier_node)
+    workflow.add_node("generator", generator_node)
+    workflow.add_node("reviewer", reviewer_node)
+    workflow.add_node("user_review", user_review_node)
+    workflow.add_node("finalize", finalize_node)
+
+    # Set entry point
+    workflow.set_entry_point("clarifier")
+
+    # Add edges with routing
+    workflow.add_conditional_edges("clarifier", clarifier_router)
+    workflow.add_conditional_edges("generator", generator_router)
+    workflow.add_conditional_edges("reviewer", reviewer_router)
+    workflow.add_conditional_edges("user_review", user_decision_router)
+    workflow.add_edge("finalize", END)
+
+    # Checkpointing
     if settings.database_url and POSTGRES_AVAILABLE:
-        try:
-            checkpointer = PostgresSaver.from_conn_string(settings.database_url)
-            logger.info("PostgreSQL checkpointer initialized")
-        except Exception as e:
-            logger.warning(f"Failed to initialize PostgreSQL checkpointer: {e}, using in-memory")
-            checkpointer = MemorySaver()
+        logger.info("Using PostgreSQL checkpointing")
+        checkpointer = PostgresSaver.from_conn_string(settings.database_url)
     else:
-        if settings.database_url and not POSTGRES_AVAILABLE:
-            logger.warning("Database URL configured but PostgreSQL dependencies not installed, using in-memory")
-        else:
-            logger.info("No database URL configured, using in-memory checkpointing")
+        logger.info("Using in-memory checkpointing")
         checkpointer = MemorySaver()
 
-    app = graph.compile(checkpointer=checkpointer)
+    # Compile
+    app = workflow.compile(checkpointer=checkpointer)
 
-    logger.info("Workflow graph compiled successfully")
-
+    logger.info("Workflow graph compiled")
     return app
-
-
-# Create the compiled graph (singleton)
-workflow = create_workflow_graph()

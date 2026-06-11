@@ -1,45 +1,52 @@
-"""State definition for the workplan generation workflow."""
+"""
+State definition for the workplan generation workflow (v11 - prose contract).
 
+Modernized to work with src/core/ modules:
+- requirements dict → task_brief string (prose)
+- requirements_complete → brief_ready boolean
+- Uses [[TASK_READY]] marker for completion detection
+"""
 from typing import TypedDict, List, Optional, Annotated
 from operator import add
 
 
 class WorkplanState(TypedDict):
     """
-    State that flows through the entire graph.
+    State that flows through the LangGraph workflow.
 
     The state is passed between nodes and accumulated using the
-    add operator for list fields (messages, conversation_history).
+    add operator for list fields (messages, clarifier_history).
     """
 
     # ========== Session Info ==========
     session_id: str
-    image_url: str
-    initial_description: str
+    image_url: str  # Local path or remote URL
+    initial_request: str  # User's original request (replaces initial_description)
 
-    # ========== Messages (accumulated) ==========
+    # ========== Messages (for streaming to client) ==========
     messages: Annotated[List[dict], add]
 
-    # ========== Agent 1: Clarifier ==========
-    conversation_history: List[dict]
+    # ========== Clarifier (Agent 1) ==========
+    clarifier_history: List[dict]  # OpenAI message format
     clarification_round: int
-    requirements_complete: bool
-    requirements: Optional[dict]
+    brief_ready: bool  # True when [[TASK_READY]] detected
+    task_brief: Optional[str]  # Prose brief from Clarifier (replaces requirements dict)
 
-    # ========== Agent 2: Generator ==========
+    # ========== Generator (Agent 2) ==========
     generation_attempts: int
     current_workplan: Optional[dict]
-    generation_feedback: Optional[dict]
+    generation_error: Optional[str]
+    generation_raw: Optional[str]
 
-    # ========== Agent 3: Reviewer ==========
+    # ========== Reviewer (Agent 3) ==========
     review_iterations: int
-    review_result: Optional[dict]
+    review_result: Optional[dict]  # Review object serialized to dict
 
-    # ========== User Interaction ==========
+    # ========== User Interaction (Human-in-the-Loop) ==========
     awaiting_user_input: bool
     user_input_type: Optional[str]  # "clarification" or "decision"
-    user_response: Optional[str]
-    user_decision: Optional[str]  # "accept", "restart_agent2", "restart_agent1"
+    user_response: Optional[str]  # User's answer to clarification question
+    user_decision: Optional[str]  # "accept", "restart_generator", "restart_clarifier"
 
     # ========== Final Output ==========
     final_workplan: Optional[dict]
