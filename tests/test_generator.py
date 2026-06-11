@@ -33,12 +33,12 @@ API_KEY = os.environ.get("GEN_API_KEY")
 MODEL = os.environ.get("GEN_MODEL", "<set GEN_MODEL>")
 PROMPT_PATH = Path(os.environ.get("GENERATOR_PROMPT", "prompts/generator_system_prompt.md"))
 SPEC_PATH = Path(os.environ.get("API_SPEC", "kb_compiled/context_spec.md"))
-WORKPLANS_DIR = Path(os.environ.get("WORKPLANS_DIR", "/Users/junwei/Personal/CZ/agent/workplan"))
+WORKPLANS_DIR = Path(os.environ.get("WORKPLANS_DIR", "examples"))
 
 WORKPLAN_FILES = {
     "siriusred": "siriusred_workplan.json",
-    "ki67": "ki67_workplan.txt",
-    "SMA": "SMA_workplan.txt",
+    "ki67": "ki67_workplan.json",
+    "SMA": "SMA_workplan.json",
     "空泡": "空泡_workplan.json",
     "rnascope": "rnascope_workplan.json",
     "脂滴rgb": "脂滴rgb_workplan.json",

@@ -1,130 +1,112 @@
-# 工作计划生成器 - REST API Web 服务
+# Workplan Generator v11
 
-这是一个使用 LangGraph 和豆包 (DouBao) 大语言模型构建的多智能体系统，旨在为成像分析生成专业的工作计划 (Workplan)。
+Multi-agent system for generating microscopy analysis workplans using LangGraph and DouBao LLM.
 
-**这是一个专为前端应用集成而设计的 REST API Web 服务。它的所有核心功能均通过 HTTP 接口向外提供。**
-
-## 快速开始
+## Quick Start
 
 ```bash
-cd workplan-generator
-
-# 安装依赖
+# Install dependencies
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
-# 启动 API 服务器
-uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+# Configure
+cp .env.example .env
+# Edit .env: ARK_API_KEY, CLARIFIER_MODEL
+
+# Run CLI
+python pipeline.py --image test.png --request "统计Ki67阳性率"
+
+# Or run API server
+uvicorn src.api.main:app --reload --port 8000
 ```
 
-**API 运行地址**：http://localhost:8000
+Visit http://localhost:8000/docs for API documentation.
 
-**API 交互式文档**：http://localhost:8000/docs
+## Architecture
 
-**完整文档请参阅 [BACKEND_API_GUIDE.md](BACKEND_API_GUIDE.md)**
+### Three-Agent Pipeline
 
-## 核心功能
-
-接收显微镜图像 + 需求描述 → 生成经过验证的结构化工作计划 (JSON 格式)
-
-**系统包含三个智能体 (Agents)：**
-1. **需求澄清智能体 (Clarifier)**：通过提问深入理解您的分析需求。
-2. **计划生成智能体 (Generator)**：创建结构化的工作计划 JSON。
-3. **审查智能体 (Reviewer)**：验证工作计划的正确性和可行性。
-
-## 系统架构
-
-```text
-用户上传图像 + 需求描述
-    ↓
-智能体 1 (澄清者) - 循环问答以明确需求
-    ↓
-智能体 2 (生成者) - 创建工作计划
-    ↓
-智能体 3 (审查者) - 验证计划 (必要时与智能体 2 循环交互修正)
-    ↓
-用户审查 - 接受计划 / 重新开始
-    ↓
-输出最终的工作计划 JSON
+```
+Image + Request → Clarifier (prose conversation) → Generator (JSON) → Reviewer → Accept
 ```
 
-## 技术栈
+**Clarifier** - Vision LLM analyzes image, converses until `[[TASK_READY]]`
+**Generator** - Text LLM creates workplan JSON with few-shot examples
+**Reviewer** - Rule-based validation (structural + schema)
 
-- **LangGraph**：多智能体编排与状态管理
-- **豆包 (DouBao)**：字节跳动大语言模型 (LLM)
-- **FastAPI**：构建高性能 REST API
-- **内存存储 (In-memory storage)**：MVP 阶段无需配置外部数据库
+### Core Modules (`src/core/`)
 
-## Web 服务使用说明
+Framework-agnostic business logic:
+- `clarifier.py`, `generator.py`, `reviewer.py`
+- `kb.py` - Load API spec, examples, schema
+- `llm.py` - Client factory
+- `orchestrator.py` - Callback-driven pipeline
 
-本系统**完全作为一个 Web 服务运行**，所有功能均需通过 REST API 接口以 HTTP 请求的方式进行访问。
+### LangGraph Layer (`src/graph/`)
 
-### 启动 API 服务器
+Thin wrapper for control flow, routing, checkpointing.
+
+### REST API (`src/api/`)
+
+FastAPI endpoints - see auto-generated docs at http://localhost:8000/docs.
+
+## Project Structure
+
+```
+workplan-generator/
+├── prompts/                          # v11 system prompts
+├── kb_compiled/                      # Compiled API docs + schema
+├── examples/                         # Six production workplans (few-shot)
+├── src/
+│   ├── core/                        # Framework-agnostic logic
+│   ├── graph/                       # LangGraph workflow
+│   ├── api/                         # FastAPI endpoints
+│   └── knowledge/compiler/          # Doc compiler
+├── tests/                           # Battery tests
+├── pipeline.py                      # CLI entry point
+└── requirements.txt
+```
+
+## Configuration
+
+**Required**:
+- `ARK_API_KEY` - DouBao API key
+- `CLARIFIER_MODEL` - Vision endpoint (e.g., `ep-xxxx`)
+
+**Optional**:
+- `GENERATOR_MODEL` - Text endpoint (defaults to CLARIFIER_MODEL)
+- `DATABASE_URL` - PostgreSQL for persistent sessions
+- `S3_*` - S3/MinIO for image storage
+
+## Testing
 
 ```bash
-uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
+# Clarifier
+python tests/test_clarifier.py image.png "request"
+
+# Generator
+python tests/test_generator.py --case SMA --brief briefs/SMA.txt --fewshot siriusred,ki67,rnascope,脂滴rgb
 ```
 
-### 前端集成示例
+See `tests/README_COMPLETE_TESTS.md` for validation results.
 
-```javascript
-// 上传图像并初始化会话
-const formData = new FormData();
-formData.append('image', imageFile);
-formData.append('description', '计算 Ki67 阳性细胞的数量');
+## Development
 
-const response = await fetch('http://localhost:8000/sessions', {
-  method: 'POST',
-  body: formData
-});
+All business logic is in `src/core/` as pure functions. LangGraph and API automatically use updates.
 
-const { session_id, questions } = await response.json();
-```
-
-### 客户端集成示例
-
-任何标准 HTTP 客户端均可访问此 API：
+## Production
 
 ```bash
-# 交互式 API 文档 (Swagger UI)
-open http://localhost:8000/docs
-
-# Python 客户端示例 (演示集成方式)
-python test_client.py microscope.png "计算细胞数量"
-
-# cURL (命令行测试)
-curl -X POST http://localhost:8000/sessions \
-  -F "image=@microscope.png" \
-  -F "description=计算阳性细胞的数量"
+gunicorn src.api.main:app \
+  --workers 4 \
+  --worker-class uvicorn.workers.UvicornWorker \
+  --bind 0.0.0.0:8000
 ```
 
-**注意**：`test_client.py` 仅为一个集成示例代码，用于演示如何通过 Python 调用 API。您的前端应用应构造并发送类似的 HTTP 请求。
+Use PostgreSQL for sessions, S3 for images.
 
-## API 接口参考
+## Documentation
 
-| 接口路径 (Endpoint) | 请求方法 | 功能描述 |
-|----------|--------|-------------|
-| `/sessions` | POST | 上传图像和描述，初始化新会话 |
-| `/sessions/{id}/respond` | POST | 回答智能体 1 (澄清者) 提出的问题 |
-| `/sessions/{id}/decision` | POST | 接受当前工作计划或选择重新生成 |
-| `/sessions/{id}` | GET | 获取当前会话的状态 |
-| `/sessions/{id}/workplan` | GET | 下载最终生成的工作计划 JSON |
-| `/health` | GET | 服务健康检查 |
-
-**完整 API 文档请查阅**：[BACKEND_API_GUIDE.md](BACKEND_API_GUIDE.md)
-
-## 环境配置
-
-运行前需要在根目录下创建 `.env` 文件，最简配置要求如下：
-```bash
-DOUBAO_API_KEY=your_key
-DOUBAO_BASE_URL=[https://ark.cn-beijing.volces.com/api/v3] (https://ark.cn-beijing.volces.com/api/v3)
-DOUBAO_MODEL=ep-your-endpoint-id
-```
-
-就是这么简单！在 MVP（最小可行性产品）阶段，您无需配置任何数据库、S3 存储桶或 Docker 环境。
-
-## 文档导航
-
-- **[MVP_QUICKSTART.md](MVP_QUICKSTART.md)** - 新手请从这里开始！
+- API reference: http://localhost:8000/docs (auto-generated Swagger UI)
+- `tests/README_COMPLETE_TESTS.md` - Test validation results
