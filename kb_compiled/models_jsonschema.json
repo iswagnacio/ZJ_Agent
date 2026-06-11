@@ -16,6 +16,163 @@
     },
     "groups": {
       "请求参数": {
+        "$defs": {
+          "CreateTargetOutputOptions": {
+            "properties": {
+              "generateDefaultRoiVariants": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Generatedefaultroivariants"
+              }
+            },
+            "title": "CreateTargetOutputOptions",
+            "type": "object"
+          },
+          "CreateTargetRoiRenderParams": {
+            "properties": {
+              "enabled": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Enabled"
+              },
+              "renderImageResourceUuid": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Renderimageresourceuuid"
+              },
+              "renderImageBase64": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Renderimagebase64"
+              },
+              "renderContour": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Rendercontour"
+              },
+              "renderMaskOverlay": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Rendermaskoverlay"
+              },
+              "overlayAlpha": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 0.35,
+                "title": "Overlayalpha"
+              },
+              "contourColor": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": "#FFFF00",
+                "title": "Contourcolor"
+              },
+              "contourWidthPixels": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 2,
+                "title": "Contourwidthpixels"
+              }
+            },
+            "title": "CreateTargetRoiRenderParams",
+            "type": "object"
+          },
+          "CreateTargetVariantStrategy": {
+            "properties": {
+              "boundaryModes": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "in_bound",
+                      "on_bound"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Boundarymodes"
+              },
+              "offsetLevels": {
+                "anyOf": [
+                  {
+                    "const": "[-0.2,-0.1,0,0.1,0.2]",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Offsetlevels"
+              }
+            },
+            "title": "CreateTargetVariantStrategy",
+            "type": "object"
+          }
+        },
         "properties": {
           "sessionId": {
             "title": "Sessionid",
@@ -149,41 +306,35 @@
           "roiRenderParams": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/$defs/CreateTargetRoiRenderParams"
               },
               {
                 "type": "null"
               }
             ],
-            "default": null,
-            "title": "Roirenderparams"
+            "default": null
           },
           "variantStrategy": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/$defs/CreateTargetVariantStrategy"
               },
               {
                 "type": "null"
               }
             ],
-            "default": null,
-            "title": "Variantstrategy"
+            "default": null
           },
           "outputOptions": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/$defs/CreateTargetOutputOptions"
               },
               {
                 "type": "null"
               }
             ],
-            "default": null,
-            "title": "Outputoptions"
+            "default": null
           }
         },
         "required": [
@@ -419,6 +570,382 @@
     },
     "groups": {
       "通用请求参数": {
+        "$defs": {
+          "MeasureROIFilterRulesFilterRules": {
+            "properties": {
+              "<metric>": {
+                "$ref": "#/$defs/MeasureROIFilterRules_metric__metric_"
+              }
+            },
+            "required": [
+              "<metric>"
+            ],
+            "title": "MeasureROIFilterRulesFilterRules",
+            "type": "object"
+          },
+          "MeasureROIFilterRules_metric__metric_": {
+            "properties": {
+              "min": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Min"
+              },
+              "max": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Max"
+              }
+            },
+            "title": "MeasureROIFilterRules<metric><metric>",
+            "type": "object"
+          },
+          "MeasureROIInputResources": {
+            "properties": {
+              "parentRoiResourceUuid": {
+                "title": "Parentroiresourceuuid",
+                "type": "string"
+              },
+              "measureImageResourceUuid": {
+                "title": "Measureimageresourceuuid",
+                "type": "string"
+              }
+            },
+            "required": [
+              "parentRoiResourceUuid",
+              "measureImageResourceUuid"
+            ],
+            "title": "MeasureROIInputResources",
+            "type": "object"
+          },
+          "MeasureROIOutputOptions": {
+            "properties": {
+              "returnMeasureTable": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Returnmeasuretable"
+              },
+              "returnMeasureRows": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Returnmeasurerows"
+              },
+              "returnRoiZip": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnroizip"
+              },
+              "returnFilteredRoiZip": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Returnfilteredroizip"
+              },
+              "returnFilteredOutRoiZip": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnfilteredoutroizip"
+              },
+              "returnFilteredRoiBase64": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnfilteredroibase64"
+              },
+              "returnFilteredOutRoiBase64": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnfilteredoutroibase64"
+              },
+              "returnSummary": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Returnsummary"
+              },
+              "returnRoiRender": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnroirender"
+              },
+              "returnRenderedImage": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnrenderedimage"
+              },
+              "returnRenderedImageStoredFile": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Returnrenderedimagestoredfile"
+              },
+              "returnRenderedImageBase64": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnrenderedimagebase64"
+              },
+              "returnRoiMaskStoredFile": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Returnroimaskstoredfile"
+              },
+              "returnRoiMaskBase64": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnroimaskbase64"
+              }
+            },
+            "title": "MeasureROIOutputOptions",
+            "type": "object"
+          },
+          "MeasureROIParams": {
+            "properties": {
+              "measureFeatures": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "AREA",
+                      "MEAN",
+                      "CIRCULARITY",
+                      "INTEGRATED_DENSITY",
+                      "MIN",
+                      "MAX",
+                      "STD_DEV"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Measurefeatures"
+              },
+              "filterRules": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/MeasureROIFilterRulesFilterRules"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              }
+            },
+            "title": "MeasureROIParams",
+            "type": "object"
+          },
+          "MeasureROIRoiRenderParams": {
+            "properties": {
+              "renderImageResourceUuid": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": "inputResources.measureImageResourceUuid",
+                "title": "Renderimageresourceuuid"
+              },
+              "renderImageBase64": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Renderimagebase64"
+              },
+              "enabled": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Enabled"
+              },
+              "renderContour": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Rendercontour"
+              },
+              "renderMaskOverlay": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Rendermaskoverlay"
+              },
+              "overlayAlpha": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 0.35,
+                "title": "Overlayalpha"
+              },
+              "contourColor": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": "#FFFF00",
+                "title": "Contourcolor"
+              },
+              "contourWidthPixels": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 2,
+                "title": "Contourwidthpixels"
+              }
+            },
+            "title": "MeasureROIRoiRenderParams",
+            "type": "object"
+          }
+        },
         "properties": {
           "sessionId": {
             "title": "Sessionid",
@@ -469,22 +996,18 @@
             "type": "string"
           },
           "inputResources": {
-            "additionalProperties": true,
-            "title": "Inputresources",
-            "type": "object"
+            "$ref": "#/$defs/MeasureROIInputResources"
           },
           "params": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/$defs/MeasureROIParams"
               },
               {
                 "type": "null"
               }
             ],
-            "default": null,
-            "title": "Params"
+            "default": null
           },
           "filterRules": {
             "anyOf": [
@@ -502,28 +1025,24 @@
           "roiRenderParams": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/$defs/MeasureROIRoiRenderParams"
               },
               {
                 "type": "null"
               }
             ],
-            "default": null,
-            "title": "Roirenderparams"
+            "default": null
           },
           "outputOptions": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/$defs/MeasureROIOutputOptions"
               },
               {
                 "type": "null"
               }
             ],
-            "default": null,
-            "title": "Outputoptions"
+            "default": null
           }
         },
         "required": [
@@ -547,6 +1066,58 @@
     "groups": {
       "请求参数": {
         "$defs": {
+          "PicSplitColorDeconvParams": {
+            "properties": {
+              "matrix": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "H&E",
+                      "H&E 2",
+                      "H DAB",
+                      "Feulgen Light Green",
+                      "Giemsa",
+                      "FastRed FastBlue DAB",
+                      "Methyl Green DAB",
+                      "H&E DAB",
+                      "H AEC",
+                      "Azan-Mallory",
+                      "Masson Trichrome",
+                      "Alcian blue & H",
+                      "H PAS",
+                      "Brilliant_Blue",
+                      "RGB",
+                      "CMY",
+                      "custom"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Matrix"
+              },
+              "stainVectors": {
+                "anyOf": [
+                  {
+                    "items": {
+                      "$ref": "#/$defs/PicSplitStainVectorsStainVectors"
+                    },
+                    "type": "array"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Stainvectors"
+              }
+            },
+            "title": "PicSplitColorDeconvParams",
+            "type": "object"
+          },
           "PicSplitInputImage": {
             "properties": {
               "storedFilename": {
@@ -571,9 +1142,129 @@
             ],
             "title": "PicSplitInputImage",
             "type": "object"
+          },
+          "PicSplitOutputOptions": {
+            "properties": {
+              "returnChannelBase64": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Returnchannelbase64"
+              },
+              "returnChannelStoredFiles": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Returnchannelstoredfiles"
+              }
+            },
+            "title": "PicSplitOutputOptions",
+            "type": "object"
+          },
+          "PicSplitStainVectorsStainVectors": {
+            "properties": {
+              "r": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "R"
+              },
+              "g": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "G"
+              },
+              "b": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "B"
+              }
+            },
+            "title": "PicSplitStainVectorsStainVectors",
+            "type": "object"
           }
         },
         "properties": {
+          "pseudoColorRgb": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Pseudocolorrgb"
+          },
+          "pseudoColorStoredFilename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Pseudocolorstoredfilename"
+          },
+          "pseudoColorOriginalFilename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Pseudocolororiginalfilename"
+          },
+          "pseudoColorResourceUuid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Pseudocolorresourceuuid"
+          },
           "sessionId": {
             "title": "Sessionid",
             "type": "string"
@@ -592,28 +1283,24 @@
           "colorDeconvParams": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/$defs/PicSplitColorDeconvParams"
               },
               {
                 "type": "null"
               }
             ],
-            "default": null,
-            "title": "Colordeconvparams"
+            "default": null
           },
           "outputOptions": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/$defs/PicSplitOutputOptions"
               },
               {
                 "type": "null"
               }
             ],
-            "default": null,
-            "title": "Outputoptions"
+            "default": null
           }
         },
         "required": [
@@ -660,6 +1347,164 @@
     "discriminators": {},
     "groups": {
       "请求参数": {
+        "$defs": {
+          "ROIRenderOutputOptions": {
+            "properties": {
+              "returnRenderedImageStoredFile": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Returnrenderedimagestoredfile"
+              },
+              "returnRenderedImageBase64": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnrenderedimagebase64"
+              },
+              "returnRoiMaskStoredFile": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Returnroimaskstoredfile"
+              },
+              "returnRoiMaskBase64": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnroimaskbase64"
+              }
+            },
+            "title": "ROIRenderOutputOptions",
+            "type": "object"
+          },
+          "ROIRenderRoiRenderParams": {
+            "properties": {
+              "enabled": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Enabled"
+              },
+              "renderContour": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Rendercontour"
+              },
+              "renderMaskOverlay": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Rendermaskoverlay"
+              },
+              "overlayAlpha": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 0.35,
+                "title": "Overlayalpha"
+              },
+              "contourColor": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": "#FFFF00",
+                "title": "Contourcolor"
+              },
+              "renderColor": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Rendercolor"
+              },
+              "color": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Color"
+              },
+              "contourWidthPixels": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 2,
+                "title": "Contourwidthpixels"
+              }
+            },
+            "title": "ROIRenderRoiRenderParams",
+            "type": "object"
+          }
+        },
         "properties": {
           "sessionId": {
             "title": "Sessionid",
@@ -696,28 +1541,24 @@
           "roiRenderParams": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/$defs/ROIRenderRoiRenderParams"
               },
               {
                 "type": "null"
               }
             ],
-            "default": null,
-            "title": "Roirenderparams"
+            "default": null
           },
           "outputOptions": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/$defs/ROIRenderOutputOptions"
               },
               {
                 "type": "null"
               }
             ],
-            "default": null,
-            "title": "Outputoptions"
+            "default": null
           }
         },
         "required": [
@@ -745,6 +1586,188 @@
     },
     "groups": {
       "通用请求参数": {
+        "$defs": {
+          "SegmentROIOutputOptions": {
+            "properties": {
+              "returnRoiRender": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnroirender"
+              },
+              "returnRenderedImage": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnrenderedimage"
+              },
+              "returnRenderedImageStoredFile": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Returnrenderedimagestoredfile"
+              },
+              "returnRenderedImageBase64": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnrenderedimagebase64"
+              },
+              "returnRoiMaskStoredFile": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Returnroimaskstoredfile"
+              },
+              "returnRoiMaskBase64": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnroimaskbase64"
+              }
+            },
+            "title": "SegmentROIOutputOptions",
+            "type": "object"
+          },
+          "SegmentROIRoiRenderParams": {
+            "properties": {
+              "renderImageResourceUuid": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Renderimageresourceuuid"
+              },
+              "renderImageBase64": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Renderimagebase64"
+              },
+              "enabled": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Enabled"
+              },
+              "renderContour": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Rendercontour"
+              },
+              "renderMaskOverlay": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Rendermaskoverlay"
+              },
+              "overlayAlpha": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 0.35,
+                "title": "Overlayalpha"
+              },
+              "contourColor": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": "#FFFF00",
+                "title": "Contourcolor"
+              },
+              "contourWidthPixels": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 2,
+                "title": "Contourwidthpixels"
+              }
+            },
+            "title": "SegmentROIRoiRenderParams",
+            "type": "object"
+          }
+        },
         "properties": {
           "sessionId": {
             "title": "Sessionid",
@@ -761,6 +1784,18 @@
             ],
             "default": null,
             "title": "Workplanid"
+          },
+          "stepId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Stepid"
           },
           "segmentationMethod": {
             "enum": [
@@ -788,6 +1823,18 @@
             "default": null,
             "title": "Operation"
           },
+          "targetName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Targetname"
+          },
           "inputResources": {
             "additionalProperties": true,
             "title": "Inputresources",
@@ -797,6 +1844,28 @@
             "additionalProperties": true,
             "title": "Params",
             "type": "object"
+          },
+          "roiRenderParams": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SegmentROIRoiRenderParams"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "outputOptions": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SegmentROIOutputOptions"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
           }
         },
         "required": [
@@ -808,6 +1877,1348 @@
         "title": "SegmentROI",
         "type": "object"
       },
+      "threshold:run_segmentation": {
+        "$defs": {
+          "SegmentROIThresholdRunSegmentationImagePreprocessImagePreprocess": {
+            "properties": {
+              "smooth": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 0.0,
+                "title": "Smooth"
+              },
+              "sharp": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 0.0,
+                "title": "Sharp"
+              },
+              "blur": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 0.0,
+                "title": "Blur"
+              },
+              "invert": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Invert"
+              }
+            },
+            "title": "SegmentROIThresholdRunSegmentationImagePreprocessImagePreprocess",
+            "type": "object"
+          },
+          "SegmentROIThresholdRunSegmentationInputResources": {
+            "properties": {
+              "sourceImageResourceUuid": {
+                "title": "Sourceimageresourceuuid",
+                "type": "string"
+              }
+            },
+            "required": [
+              "sourceImageResourceUuid"
+            ],
+            "title": "SegmentROIThresholdRunSegmentationInputResources",
+            "type": "object"
+          },
+          "SegmentROIThresholdRunSegmentationOutputOptions": {
+            "properties": {
+              "returnRoiRender": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnroirender"
+              },
+              "returnRenderedImage": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnrenderedimage"
+              },
+              "returnRenderedImageStoredFile": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Returnrenderedimagestoredfile"
+              },
+              "returnRenderedImageBase64": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnrenderedimagebase64"
+              },
+              "returnRoiMaskStoredFile": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Returnroimaskstoredfile"
+              },
+              "returnRoiMaskBase64": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnroimaskbase64"
+              },
+              "returnPreprocessedImage": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnpreprocessedimage"
+              },
+              "returnBinaryImage": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Returnbinaryimage"
+              }
+            },
+            "title": "SegmentROIThresholdRunSegmentationOutputOptions",
+            "type": "object"
+          },
+          "SegmentROIThresholdRunSegmentationParams": {
+            "properties": {
+              "imagePreprocess": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SegmentROIThresholdRunSegmentationImagePreprocessImagePreprocess"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "thresholdParams": {
+                "$ref": "#/$defs/SegmentROIThresholdRunSegmentationThresholdParamsThresholdParams"
+              }
+            },
+            "required": [
+              "thresholdParams"
+            ],
+            "title": "SegmentROIThresholdRunSegmentationParams",
+            "type": "object"
+          },
+          "SegmentROIThresholdRunSegmentationRoiRenderParams": {
+            "properties": {
+              "renderImageResourceUuid": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Renderimageresourceuuid"
+              },
+              "renderImageBase64": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Renderimagebase64"
+              },
+              "enabled": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Enabled"
+              },
+              "renderContour": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Rendercontour"
+              },
+              "renderMaskOverlay": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Rendermaskoverlay"
+              },
+              "overlayAlpha": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 0.35,
+                "title": "Overlayalpha"
+              },
+              "contourColor": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": "#FFFF00",
+                "title": "Contourcolor"
+              },
+              "contourWidthPixels": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 2,
+                "title": "Contourwidthpixels"
+              }
+            },
+            "title": "SegmentROIThresholdRunSegmentationRoiRenderParams",
+            "type": "object"
+          },
+          "SegmentROIThresholdRunSegmentationThresholdParamsThresholdParams": {
+            "properties": {
+              "thresholdMin": {
+                "title": "Thresholdmin",
+                "type": "integer"
+              },
+              "thresholdMax": {
+                "title": "Thresholdmax",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "thresholdMin",
+              "thresholdMax"
+            ],
+            "title": "SegmentROIThresholdRunSegmentationThresholdParamsThresholdParams",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "sessionId": {
+            "title": "Sessionid",
+            "type": "string"
+          },
+          "workplanId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Workplanid"
+          },
+          "stepId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Stepid"
+          },
+          "segmentationMethod": {
+            "enum": [
+              "threshold",
+              "cellpose",
+              "weka"
+            ],
+            "title": "Segmentationmethod",
+            "type": "string"
+          },
+          "operation": {
+            "anyOf": [
+              {
+                "enum": [
+                  "run_segmentation",
+                  "postprocess_binary_and_analyze",
+                  "analyze_particles"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Operation"
+          },
+          "targetName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Targetname"
+          },
+          "inputResources": {
+            "$ref": "#/$defs/SegmentROIThresholdRunSegmentationInputResources"
+          },
+          "params": {
+            "$ref": "#/$defs/SegmentROIThresholdRunSegmentationParams"
+          },
+          "roiRenderParams": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SegmentROIThresholdRunSegmentationRoiRenderParams"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "outputOptions": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SegmentROIThresholdRunSegmentationOutputOptions"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "sessionId",
+          "segmentationMethod",
+          "inputResources",
+          "params"
+        ],
+        "title": "SegmentROIThresholdRunSegmentation",
+        "type": "object"
+      },
+      "threshold:postprocess_binary_and_analyze": {
+        "$defs": {
+          "SegmentROIThresholdPostprocessBinaryAndAnalyzeAnalyzeParticlesParamsAnalyzeParticlesParams": {
+            "properties": {
+              "sizeMin": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 20.0,
+                "title": "Sizemin"
+              },
+              "sizeMax": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 2000.0,
+                "title": "Sizemax"
+              },
+              "circularityMin": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 0.2,
+                "title": "Circularitymin"
+              },
+              "circularityMax": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 1.0,
+                "title": "Circularitymax"
+              },
+              "excludeOnEdges": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Excludeonedges"
+              },
+              "includeHoles": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Includeholes"
+              }
+            },
+            "title": "SegmentROIThresholdPostprocessBinaryAndAnalyzeAnalyzeParticlesParamsAnalyzeParticlesParams",
+            "type": "object"
+          },
+          "SegmentROIThresholdPostprocessBinaryAndAnalyzeBinaryPostprocessBinaryPostprocess": {
+            "properties": {
+              "fillHole": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Fillhole"
+              },
+              "watershed": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Watershed"
+              }
+            },
+            "title": "SegmentROIThresholdPostprocessBinaryAndAnalyzeBinaryPostprocessBinaryPostprocess",
+            "type": "object"
+          },
+          "SegmentROIThresholdPostprocessBinaryAndAnalyzeInputResources": {
+            "properties": {
+              "binaryImageResourceUuid": {
+                "title": "Binaryimageresourceuuid",
+                "type": "string"
+              }
+            },
+            "required": [
+              "binaryImageResourceUuid"
+            ],
+            "title": "SegmentROIThresholdPostprocessBinaryAndAnalyzeInputResources",
+            "type": "object"
+          },
+          "SegmentROIThresholdPostprocessBinaryAndAnalyzeOutputOptions": {
+            "properties": {
+              "returnRoiRender": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnroirender"
+              },
+              "returnRenderedImage": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnrenderedimage"
+              },
+              "returnRenderedImageStoredFile": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Returnrenderedimagestoredfile"
+              },
+              "returnRenderedImageBase64": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnrenderedimagebase64"
+              },
+              "returnRoiMaskStoredFile": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Returnroimaskstoredfile"
+              },
+              "returnRoiMaskBase64": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnroimaskbase64"
+              },
+              "returnPostprocessedBinary": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Returnpostprocessedbinary"
+              },
+              "returnRoiZip": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Returnroizip"
+              }
+            },
+            "title": "SegmentROIThresholdPostprocessBinaryAndAnalyzeOutputOptions",
+            "type": "object"
+          },
+          "SegmentROIThresholdPostprocessBinaryAndAnalyzeParams": {
+            "properties": {
+              "binaryPostprocess": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SegmentROIThresholdPostprocessBinaryAndAnalyzeBinaryPostprocessBinaryPostprocess"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "analyzeParticlesParams": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SegmentROIThresholdPostprocessBinaryAndAnalyzeAnalyzeParticlesParamsAnalyzeParticlesParams"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              }
+            },
+            "title": "SegmentROIThresholdPostprocessBinaryAndAnalyzeParams",
+            "type": "object"
+          },
+          "SegmentROIThresholdPostprocessBinaryAndAnalyzeRoiRenderParams": {
+            "properties": {
+              "renderImageResourceUuid": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Renderimageresourceuuid"
+              },
+              "renderImageBase64": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Renderimagebase64"
+              },
+              "enabled": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Enabled"
+              },
+              "renderContour": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Rendercontour"
+              },
+              "renderMaskOverlay": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Rendermaskoverlay"
+              },
+              "overlayAlpha": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 0.35,
+                "title": "Overlayalpha"
+              },
+              "contourColor": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": "#FFFF00",
+                "title": "Contourcolor"
+              },
+              "contourWidthPixels": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 2,
+                "title": "Contourwidthpixels"
+              }
+            },
+            "title": "SegmentROIThresholdPostprocessBinaryAndAnalyzeRoiRenderParams",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "sessionId": {
+            "title": "Sessionid",
+            "type": "string"
+          },
+          "workplanId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Workplanid"
+          },
+          "stepId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Stepid"
+          },
+          "segmentationMethod": {
+            "enum": [
+              "threshold",
+              "cellpose",
+              "weka"
+            ],
+            "title": "Segmentationmethod",
+            "type": "string"
+          },
+          "operation": {
+            "anyOf": [
+              {
+                "enum": [
+                  "run_segmentation",
+                  "postprocess_binary_and_analyze",
+                  "analyze_particles"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Operation"
+          },
+          "targetName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Targetname"
+          },
+          "inputResources": {
+            "$ref": "#/$defs/SegmentROIThresholdPostprocessBinaryAndAnalyzeInputResources"
+          },
+          "params": {
+            "$ref": "#/$defs/SegmentROIThresholdPostprocessBinaryAndAnalyzeParams"
+          },
+          "roiRenderParams": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SegmentROIThresholdPostprocessBinaryAndAnalyzeRoiRenderParams"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "outputOptions": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SegmentROIThresholdPostprocessBinaryAndAnalyzeOutputOptions"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "sessionId",
+          "segmentationMethod",
+          "inputResources",
+          "params"
+        ],
+        "title": "SegmentROIThresholdPostprocessBinaryAndAnalyze",
+        "type": "object"
+      },
+      "threshold:analyze_particles": {
+        "$defs": {
+          "SegmentROIThresholdAnalyzeParticlesAnalyzeParticlesParamsAnalyzeParticlesParams": {
+            "properties": {
+              "sizeMin": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 20.0,
+                "title": "Sizemin"
+              },
+              "sizeMax": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 2000.0,
+                "title": "Sizemax"
+              },
+              "circularityMin": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 0.2,
+                "title": "Circularitymin"
+              },
+              "circularityMax": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 1.0,
+                "title": "Circularitymax"
+              },
+              "excludeOnEdges": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Excludeonedges"
+              },
+              "includeHoles": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Includeholes"
+              }
+            },
+            "title": "SegmentROIThresholdAnalyzeParticlesAnalyzeParticlesParamsAnalyzeParticlesParams",
+            "type": "object"
+          },
+          "SegmentROIThresholdAnalyzeParticlesBinaryPostprocessBinaryPostprocess": {
+            "properties": {
+              "fillHole": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Fillhole"
+              },
+              "watershed": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Watershed"
+              }
+            },
+            "title": "SegmentROIThresholdAnalyzeParticlesBinaryPostprocessBinaryPostprocess",
+            "type": "object"
+          },
+          "SegmentROIThresholdAnalyzeParticlesInputResources": {
+            "properties": {
+              "binaryImageResourceUuid": {
+                "title": "Binaryimageresourceuuid",
+                "type": "string"
+              }
+            },
+            "required": [
+              "binaryImageResourceUuid"
+            ],
+            "title": "SegmentROIThresholdAnalyzeParticlesInputResources",
+            "type": "object"
+          },
+          "SegmentROIThresholdAnalyzeParticlesOutputOptions": {
+            "properties": {
+              "returnRoiRender": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnroirender"
+              },
+              "returnRenderedImage": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnrenderedimage"
+              },
+              "returnRenderedImageStoredFile": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Returnrenderedimagestoredfile"
+              },
+              "returnRenderedImageBase64": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnrenderedimagebase64"
+              },
+              "returnRoiMaskStoredFile": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Returnroimaskstoredfile"
+              },
+              "returnRoiMaskBase64": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnroimaskbase64"
+              },
+              "returnPostprocessedBinary": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Returnpostprocessedbinary"
+              },
+              "returnRoiZip": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Returnroizip"
+              }
+            },
+            "title": "SegmentROIThresholdAnalyzeParticlesOutputOptions",
+            "type": "object"
+          },
+          "SegmentROIThresholdAnalyzeParticlesParams": {
+            "properties": {
+              "binaryPostprocess": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SegmentROIThresholdAnalyzeParticlesBinaryPostprocessBinaryPostprocess"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              },
+              "analyzeParticlesParams": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SegmentROIThresholdAnalyzeParticlesAnalyzeParticlesParamsAnalyzeParticlesParams"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null
+              }
+            },
+            "title": "SegmentROIThresholdAnalyzeParticlesParams",
+            "type": "object"
+          },
+          "SegmentROIThresholdAnalyzeParticlesRoiRenderParams": {
+            "properties": {
+              "renderImageResourceUuid": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Renderimageresourceuuid"
+              },
+              "renderImageBase64": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Renderimagebase64"
+              },
+              "enabled": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Enabled"
+              },
+              "renderContour": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Rendercontour"
+              },
+              "renderMaskOverlay": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Rendermaskoverlay"
+              },
+              "overlayAlpha": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 0.35,
+                "title": "Overlayalpha"
+              },
+              "contourColor": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": "#FFFF00",
+                "title": "Contourcolor"
+              },
+              "contourWidthPixels": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 2,
+                "title": "Contourwidthpixels"
+              }
+            },
+            "title": "SegmentROIThresholdAnalyzeParticlesRoiRenderParams",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "sessionId": {
+            "title": "Sessionid",
+            "type": "string"
+          },
+          "workplanId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Workplanid"
+          },
+          "stepId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Stepid"
+          },
+          "segmentationMethod": {
+            "enum": [
+              "threshold",
+              "cellpose",
+              "weka"
+            ],
+            "title": "Segmentationmethod",
+            "type": "string"
+          },
+          "operation": {
+            "anyOf": [
+              {
+                "enum": [
+                  "run_segmentation",
+                  "postprocess_binary_and_analyze",
+                  "analyze_particles"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Operation"
+          },
+          "targetName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Targetname"
+          },
+          "inputResources": {
+            "$ref": "#/$defs/SegmentROIThresholdAnalyzeParticlesInputResources"
+          },
+          "params": {
+            "$ref": "#/$defs/SegmentROIThresholdAnalyzeParticlesParams"
+          },
+          "roiRenderParams": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SegmentROIThresholdAnalyzeParticlesRoiRenderParams"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "outputOptions": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SegmentROIThresholdAnalyzeParticlesOutputOptions"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "sessionId",
+          "segmentationMethod",
+          "inputResources",
+          "params"
+        ],
+        "title": "SegmentROIThresholdAnalyzeParticles",
+        "type": "object"
+      },
       "cellpose:run_segmentation": {
         "$defs": {
           "SegmentROICellposeRunSegmentationCellposeParamsCellposeParams": {
@@ -815,7 +3226,6 @@
               "model": {
                 "anyOf": [
                   {
-                    "const": "zhijing_if_nuclei",
                     "type": "string"
                   },
                   {
@@ -895,7 +3305,31 @@
           },
           "SegmentROICellposeRunSegmentationOutputOptions": {
             "properties": {
-              "returnRoiZip": {
+              "returnRoiRender": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnroirender"
+              },
+              "returnRenderedImage": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnrenderedimage"
+              },
+              "returnRenderedImageStoredFile": {
                 "anyOf": [
                   {
                     "type": "boolean"
@@ -905,6 +3339,54 @@
                   }
                 ],
                 "default": true,
+                "title": "Returnrenderedimagestoredfile"
+              },
+              "returnRenderedImageBase64": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnrenderedimagebase64"
+              },
+              "returnRoiMaskStoredFile": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Returnroimaskstoredfile"
+              },
+              "returnRoiMaskBase64": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnroimaskbase64"
+              },
+              "returnRoiZip": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
                 "title": "Returnroizip"
               }
             },
@@ -922,68 +3404,58 @@
             ],
             "title": "SegmentROICellposeRunSegmentationParams",
             "type": "object"
-          }
-        },
-        "properties": {
-          "inputResources": {
-            "$ref": "#/$defs/SegmentROICellposeRunSegmentationInputResources"
           },
-          "params": {
-            "$ref": "#/$defs/SegmentROICellposeRunSegmentationParams"
-          },
-          "outputOptions": {
-            "$ref": "#/$defs/SegmentROICellposeRunSegmentationOutputOptions"
-          }
-        },
-        "required": [
-          "inputResources",
-          "params",
-          "outputOptions"
-        ],
-        "title": "SegmentROICellposeRunSegmentation",
-        "type": "object"
-      },
-      "threshold:analyze_particles": {
-        "$defs": {
-          "SegmentROIThresholdAnalyzeParticlesAnalyzeParticlesParamsAnalyzeParticlesParams": {
+          "SegmentROICellposeRunSegmentationRoiRenderParams": {
             "properties": {
-              "sizeMin": {
+              "renderImageResourceUuid": {
                 "anyOf": [
                   {
-                    "type": "number"
+                    "type": "string"
                   },
                   {
                     "type": "null"
                   }
                 ],
-                "default": 20.0,
-                "title": "Sizemin"
+                "default": null,
+                "title": "Renderimageresourceuuid"
               },
-              "sizeMax": {
+              "renderImageBase64": {
                 "anyOf": [
                   {
-                    "type": "number"
+                    "type": "string"
                   },
                   {
                     "type": "null"
                   }
                 ],
-                "default": 2000.0,
-                "title": "Sizemax"
+                "default": null,
+                "title": "Renderimagebase64"
               },
-              "circularityMin": {
+              "enabled": {
                 "anyOf": [
                   {
-                    "type": "number"
+                    "type": "boolean"
                   },
                   {
                     "type": "null"
                   }
                 ],
-                "default": 0.2,
-                "title": "Circularitymin"
+                "default": true,
+                "title": "Enabled"
               },
-              "excludeOnEdges": {
+              "renderContour": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Rendercontour"
+              },
+              "renderMaskOverlay": {
                 "anyOf": [
                   {
                     "type": "boolean"
@@ -993,51 +3465,524 @@
                   }
                 ],
                 "default": false,
-                "title": "Excludeonedges"
+                "title": "Rendermaskoverlay"
+              },
+              "overlayAlpha": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 0.35,
+                "title": "Overlayalpha"
+              },
+              "contourColor": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": "#FFFF00",
+                "title": "Contourcolor"
+              },
+              "contourWidthPixels": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 2,
+                "title": "Contourwidthpixels"
               }
             },
-            "title": "SegmentROIThresholdAnalyzeParticlesAnalyzeParticlesParamsAnalyzeParticlesParams",
-            "type": "object"
-          },
-          "SegmentROIThresholdAnalyzeParticlesInputResources": {
-            "properties": {
-              "binaryImageResourceUuid": {
-                "title": "Binaryimageresourceuuid",
-                "type": "string"
-              }
-            },
-            "required": [
-              "binaryImageResourceUuid"
-            ],
-            "title": "SegmentROIThresholdAnalyzeParticlesInputResources",
-            "type": "object"
-          },
-          "SegmentROIThresholdAnalyzeParticlesParams": {
-            "properties": {
-              "analyzeParticlesParams": {
-                "$ref": "#/$defs/SegmentROIThresholdAnalyzeParticlesAnalyzeParticlesParamsAnalyzeParticlesParams"
-              }
-            },
-            "required": [
-              "analyzeParticlesParams"
-            ],
-            "title": "SegmentROIThresholdAnalyzeParticlesParams",
+            "title": "SegmentROICellposeRunSegmentationRoiRenderParams",
             "type": "object"
           }
         },
         "properties": {
+          "sessionId": {
+            "title": "Sessionid",
+            "type": "string"
+          },
+          "workplanId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Workplanid"
+          },
+          "stepId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Stepid"
+          },
+          "segmentationMethod": {
+            "enum": [
+              "threshold",
+              "cellpose",
+              "weka"
+            ],
+            "title": "Segmentationmethod",
+            "type": "string"
+          },
+          "operation": {
+            "anyOf": [
+              {
+                "enum": [
+                  "run_segmentation",
+                  "postprocess_binary_and_analyze",
+                  "analyze_particles"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Operation"
+          },
+          "targetName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Targetname"
+          },
           "inputResources": {
-            "$ref": "#/$defs/SegmentROIThresholdAnalyzeParticlesInputResources"
+            "$ref": "#/$defs/SegmentROICellposeRunSegmentationInputResources"
           },
           "params": {
-            "$ref": "#/$defs/SegmentROIThresholdAnalyzeParticlesParams"
+            "$ref": "#/$defs/SegmentROICellposeRunSegmentationParams"
+          },
+          "roiRenderParams": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SegmentROICellposeRunSegmentationRoiRenderParams"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "outputOptions": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SegmentROICellposeRunSegmentationOutputOptions"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
           }
         },
         "required": [
+          "sessionId",
+          "segmentationMethod",
           "inputResources",
           "params"
         ],
-        "title": "SegmentROIThresholdAnalyzeParticles",
+        "title": "SegmentROICellposeRunSegmentation",
+        "type": "object"
+      },
+      "weka:run_segmentation": {
+        "$defs": {
+          "SegmentROIWekaRunSegmentationInputResources": {
+            "properties": {
+              "sourceImageResourceUuid": {
+                "title": "Sourceimageresourceuuid",
+                "type": "string"
+              },
+              "classifierResourceUuid": {
+                "title": "Classifierresourceuuid",
+                "type": "string"
+              }
+            },
+            "required": [
+              "sourceImageResourceUuid",
+              "classifierResourceUuid"
+            ],
+            "title": "SegmentROIWekaRunSegmentationInputResources",
+            "type": "object"
+          },
+          "SegmentROIWekaRunSegmentationOutputOptions": {
+            "properties": {
+              "returnRoiRender": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnroirender"
+              },
+              "returnRenderedImage": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnrenderedimage"
+              },
+              "returnRenderedImageStoredFile": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Returnrenderedimagestoredfile"
+              },
+              "returnRenderedImageBase64": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnrenderedimagebase64"
+              },
+              "returnRoiMaskStoredFile": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Returnroimaskstoredfile"
+              },
+              "returnRoiMaskBase64": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnroimaskbase64"
+              },
+              "returnResultImage": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Returnresultimage"
+              },
+              "returnResultImageBase64": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Returnresultimagebase64"
+              }
+            },
+            "title": "SegmentROIWekaRunSegmentationOutputOptions",
+            "type": "object"
+          },
+          "SegmentROIWekaRunSegmentationParams": {
+            "properties": {
+              "wekaParams": {
+                "$ref": "#/$defs/SegmentROIWekaRunSegmentationWekaParamsWekaParams"
+              }
+            },
+            "required": [
+              "wekaParams"
+            ],
+            "title": "SegmentROIWekaRunSegmentationParams",
+            "type": "object"
+          },
+          "SegmentROIWekaRunSegmentationRoiRenderParams": {
+            "properties": {
+              "renderImageResourceUuid": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Renderimageresourceuuid"
+              },
+              "renderImageBase64": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Renderimagebase64"
+              },
+              "enabled": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Enabled"
+              },
+              "renderContour": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": true,
+                "title": "Rendercontour"
+              },
+              "renderMaskOverlay": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Rendermaskoverlay"
+              },
+              "overlayAlpha": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 0.35,
+                "title": "Overlayalpha"
+              },
+              "contourColor": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": "#FFFF00",
+                "title": "Contourcolor"
+              },
+              "contourWidthPixels": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 2,
+                "title": "Contourwidthpixels"
+              }
+            },
+            "title": "SegmentROIWekaRunSegmentationRoiRenderParams",
+            "type": "object"
+          },
+          "SegmentROIWekaRunSegmentationWekaParamsWekaParams": {
+            "properties": {
+              "returnProbability": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": false,
+                "title": "Returnprobability"
+              },
+              "selectedClassIndex": {
+                "anyOf": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": 1,
+                "title": "Selectedclassindex"
+              }
+            },
+            "title": "SegmentROIWekaRunSegmentationWekaParamsWekaParams",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "sessionId": {
+            "title": "Sessionid",
+            "type": "string"
+          },
+          "workplanId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Workplanid"
+          },
+          "stepId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Stepid"
+          },
+          "segmentationMethod": {
+            "enum": [
+              "threshold",
+              "cellpose",
+              "weka"
+            ],
+            "title": "Segmentationmethod",
+            "type": "string"
+          },
+          "operation": {
+            "anyOf": [
+              {
+                "enum": [
+                  "run_segmentation",
+                  "postprocess_binary_and_analyze",
+                  "analyze_particles"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Operation"
+          },
+          "targetName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Targetname"
+          },
+          "inputResources": {
+            "$ref": "#/$defs/SegmentROIWekaRunSegmentationInputResources"
+          },
+          "params": {
+            "$ref": "#/$defs/SegmentROIWekaRunSegmentationParams"
+          },
+          "roiRenderParams": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SegmentROIWekaRunSegmentationRoiRenderParams"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "outputOptions": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SegmentROIWekaRunSegmentationOutputOptions"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "sessionId",
+          "segmentationMethod",
+          "inputResources",
+          "params"
+        ],
+        "title": "SegmentROIWekaRunSegmentation",
         "type": "object"
       }
     }

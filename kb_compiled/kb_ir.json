@@ -227,6 +227,121 @@
               "default": null,
               "constraint": "见下表",
               "desc": "输出控制。"
+            },
+            {
+              "path": "roiRenderParams.enabled",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": true,
+              "constraint": null,
+              "desc": "是否启用过 ROI 渲染。Create_Target 只记录，不根据该字段重新渲染。"
+            },
+            {
+              "path": "roiRenderParams.renderImageResourceUuid",
+              "type": "string",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": null,
+              "desc": "当时用于 ROI 渲染的底图资源。可以是原图、PicSplit 灰度图、PicSplit 伪彩图或任意 session 中已有图。"
+            },
+            {
+              "path": "roiRenderParams.renderImageBase64",
+              "type": "string",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": null,
+              "desc": "当时用于 ROI 渲染的底图 base64。通常不建议在 target binding 长期保存大体积 base64，推荐保存资源 ID。"
+            },
+            {
+              "path": "roiRenderParams.renderContour",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": true,
+              "constraint": null,
+              "desc": "是否渲染 ROI 轮廓。"
+            },
+            {
+              "path": "roiRenderParams.renderMaskOverlay",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "是否渲染半透明 ROI 蒙版。"
+            },
+            {
+              "path": "roiRenderParams.overlayAlpha",
+              "type": "number",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": 0.35,
+              "constraint": null,
+              "desc": "半透明 ROI 蒙版透明度。"
+            },
+            {
+              "path": "roiRenderParams.contourColor",
+              "type": "string",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": "#FFFF00",
+              "constraint": null,
+              "desc": "ROI 轮廓/蒙版颜色。"
+            },
+            {
+              "path": "roiRenderParams.contourWidthPixels",
+              "type": "integer",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": 2,
+              "constraint": null,
+              "desc": "ROI 轮廓粗细，像素单位。"
+            },
+            {
+              "path": "variantStrategy.boundaryModes",
+              "type": "array",
+              "required": false,
+              "required_note": null,
+              "enum": [
+                "in_bound",
+                "on_bound"
+              ],
+              "default": null,
+              "constraint": null,
+              "desc": "自动生成 ROI 变体的边界模式。"
+            },
+            {
+              "path": "variantStrategy.offsetLevels",
+              "type": "array",
+              "required": false,
+              "required_note": null,
+              "enum": [
+                "[-0.2,-0.1,0,0.1,0.2]"
+              ],
+              "default": null,
+              "constraint": null,
+              "desc": "ROI 缩放 offset；>0 放大，<0 缩小。"
+            },
+            {
+              "path": "outputOptions.generateDefaultRoiVariants",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": true,
+              "constraint": null,
+              "desc": "是否在 Create_Target 成功绑定 target 后自动生成默认 ROI 变体。"
             }
           ]
         }
@@ -241,7 +356,7 @@
         "POST /api/v10/formula/run"
       ],
       "content_type": "application/json",
-      "purpose": "当需要产出最终报表/答案——对最终 target 的计数、比例、OD/IOD 等计算量或比值——时使用。",
+      "purpose": "当最终结果是对已测量 target 的计算量或比值（计数、比例、OD/IOD 等），需要把测量值汇总成报表/答案时使用。",
       "purpose_source": "用途",
       "stage": "calculate",
       "stage_source": "declared",
@@ -614,6 +729,297 @@
               "default": null,
               "constraint": "见下表",
               "desc": "输出控制。"
+            },
+            {
+              "path": "inputResources.parentRoiResourceUuid",
+              "type": "string",
+              "required": true,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": "ROI zip storedFilename、targetName 或 targetResourceUuid",
+              "desc": "父 ROI 资源或 target 引用。"
+            },
+            {
+              "path": "inputResources.measureImageResourceUuid",
+              "type": "string",
+              "required": true,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": "图片 storedFilename 或已注册语义引用",
+              "desc": "用于测量强度/面积等指标的图像；若启用 ROI 渲染且未指定底图，默认也用这张图作为渲染底图。"
+            },
+            {
+              "path": "params.measureFeatures",
+              "type": "array",
+              "required": false,
+              "required_note": null,
+              "enum": [
+                "AREA",
+                "MEAN",
+                "CIRCULARITY",
+                "INTEGRATED_DENSITY",
+                "MIN",
+                "MAX",
+                "STD_DEV",
+                "AREA",
+                "MEAN",
+                "CIRCULARITY"
+              ],
+              "default": null,
+              "constraint": null,
+              "desc": "需要测量的指标。"
+            },
+            {
+              "path": "params.filterRules",
+              "type": "object",
+              "required": false,
+              "required_note": "`measureAndFilterRoi` 时可选",
+              "enum": null,
+              "default": null,
+              "constraint": "见下表",
+              "desc": "测量后筛选 ROI 的规则。"
+            },
+            {
+              "path": "params.filterRules.<metric>.min",
+              "type": "number",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": null,
+              "desc": "指定指标最小值。`metric` 可为 `AREA`、`MEAN`、`CIRCULARITY`、`INTEGRATED_DENSITY`、`MIN`、`MAX`、`STD_DEV`，也兼容 `area`、`mean`、`circularity`、`integratedDensity` 等写法。"
+            },
+            {
+              "path": "params.filterRules.<metric>.max",
+              "type": "number",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": null,
+              "desc": "指定指标最大值。"
+            },
+            {
+              "path": "roiRenderParams.renderImageResourceUuid",
+              "type": "string",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": "inputResources.measureImageResourceUuid",
+              "constraint": "图片 storedFilename 或语义引用",
+              "desc": "被渲染的底图。"
+            },
+            {
+              "path": "roiRenderParams.renderImageBase64",
+              "type": "string",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": "Base64 或 data URL",
+              "desc": "直接传入底图。"
+            },
+            {
+              "path": "roiRenderParams.enabled",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": true,
+              "constraint": null,
+              "desc": "是否启用 ROI 渲染。"
+            },
+            {
+              "path": "roiRenderParams.renderContour",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": true,
+              "constraint": null,
+              "desc": "是否绘制 ROI 轮廓。"
+            },
+            {
+              "path": "roiRenderParams.renderMaskOverlay",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "是否绘制半透明 ROI 蒙版。"
+            },
+            {
+              "path": "roiRenderParams.overlayAlpha",
+              "type": "number",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": 0.35,
+              "constraint": "0~1",
+              "desc": "半透明蒙版透明度。"
+            },
+            {
+              "path": "roiRenderParams.contourColor",
+              "type": "string",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": "#FFFF00",
+              "constraint": "`#RRGGBB`、`R,G,B`、常见英文色名",
+              "desc": "ROI 轮廓与蒙版颜色。"
+            },
+            {
+              "path": "roiRenderParams.contourWidthPixels",
+              "type": "integer",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": 2,
+              "constraint": ">=1",
+              "desc": "ROI 轮廓粗细，像素单位。"
+            },
+            {
+              "path": "outputOptions.returnMeasureTable",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": true,
+              "constraint": null,
+              "desc": "是否保存并返回测量表资源。`measureAndFilterRoi` 会返回完整测量表和筛选后测量表。"
+            },
+            {
+              "path": "outputOptions.returnMeasureRows",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": true,
+              "constraint": null,
+              "desc": "是否在响应中直接返回测量行。"
+            },
+            {
+              "path": "outputOptions.returnRoiZip",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "是否返回原 ROI zip Base64。"
+            },
+            {
+              "path": "outputOptions.returnFilteredRoiZip",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": true,
+              "constraint": null,
+              "desc": "是否保存并返回筛选后 ROI zip 文件资源。Create_Target.bindMeasureRoi 后续应使用 `filteredRoiResourceUuid`。"
+            },
+            {
+              "path": "outputOptions.returnFilteredOutRoiZip",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "是否保存并返回被筛掉 ROI zip 文件资源。"
+            },
+            {
+              "path": "outputOptions.returnFilteredRoiBase64",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "是否在响应中返回筛选后 ROI zip Base64。"
+            },
+            {
+              "path": "outputOptions.returnFilteredOutRoiBase64",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "是否在响应中返回被筛掉 ROI zip Base64。"
+            },
+            {
+              "path": "outputOptions.returnSummary",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": true,
+              "constraint": null,
+              "desc": "是否返回统计摘要。"
+            },
+            {
+              "path": "outputOptions.returnRoiRender",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "是否启用 ROI 自动渲染。"
+            },
+            {
+              "path": "outputOptions.returnRenderedImage",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "ROI 渲染启用兼容开关。"
+            },
+            {
+              "path": "outputOptions.returnRenderedImageStoredFile",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": true,
+              "constraint": null,
+              "desc": "是否保存并返回带 ROI 的渲染图。"
+            },
+            {
+              "path": "outputOptions.returnRenderedImageBase64",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "是否返回渲染图 Base64。"
+            },
+            {
+              "path": "outputOptions.returnRoiMaskStoredFile",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": true,
+              "constraint": null,
+              "desc": "是否保存并返回 ROI Mask 图。"
+            },
+            {
+              "path": "outputOptions.returnRoiMaskBase64",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "是否返回 ROI Mask Base64。"
             }
           ]
         }
@@ -645,6 +1051,46 @@
           "method": null,
           "operation": null,
           "params": [
+            {
+              "path": "pseudoColorRgb",
+              "type": "string",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": null,
+              "desc": "该通道使用的伪彩颜色，格式为 `#RRGGBB`。"
+            },
+            {
+              "path": "pseudoColorStoredFilename",
+              "type": "string",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": null,
+              "desc": "伪彩图 PNG 保存后的文件名。"
+            },
+            {
+              "path": "pseudoColorOriginalFilename",
+              "type": "string",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": null,
+              "desc": "伪彩图派生原始文件名。"
+            },
+            {
+              "path": "pseudoColorResourceUuid",
+              "type": "string",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": null,
+              "desc": "伪彩图资源 ID，通常等于 `pseudoColorStoredFilename`。"
+            },
             {
               "path": "sessionId",
               "type": "string",
@@ -717,6 +1163,94 @@
               "default": null,
               "constraint": "见下表",
               "desc": "输出控制。"
+            },
+            {
+              "path": "colorDeconvParams.matrix",
+              "type": "string",
+              "required": false,
+              "required_note": null,
+              "enum": [
+                "H&E",
+                "H&E 2",
+                "H DAB",
+                "Feulgen Light Green",
+                "Giemsa",
+                "FastRed FastBlue DAB",
+                "Methyl Green DAB",
+                "H&E DAB",
+                "H AEC",
+                "Azan-Mallory",
+                "Masson Trichrome",
+                "Alcian blue & H",
+                "H PAS",
+                "Brilliant_Blue",
+                "RGB",
+                "CMY",
+                "custom"
+              ],
+              "default": null,
+              "constraint": null,
+              "desc": "颜色反卷积矩阵名。`custom` 时必须提供 3 个 stainVectors。"
+            },
+            {
+              "path": "colorDeconvParams.stainVectors",
+              "type": "array<object>",
+              "required": false,
+              "required_note": "`matrix=custom` 时是",
+              "enum": null,
+              "default": null,
+              "constraint": "长度必须为 3",
+              "desc": "自定义染色向量。"
+            },
+            {
+              "path": "colorDeconvParams.stainVectors[].r",
+              "type": "number",
+              "required": false,
+              "required_note": "`matrix=custom` 时是",
+              "enum": null,
+              "default": null,
+              "constraint": "0~1 常用",
+              "desc": "R 分量。"
+            },
+            {
+              "path": "colorDeconvParams.stainVectors[].g",
+              "type": "number",
+              "required": false,
+              "required_note": "`matrix=custom` 时是",
+              "enum": null,
+              "default": null,
+              "constraint": "0~1 常用",
+              "desc": "G 分量。"
+            },
+            {
+              "path": "colorDeconvParams.stainVectors[].b",
+              "type": "number",
+              "required": false,
+              "required_note": "`matrix=custom` 时是",
+              "enum": null,
+              "default": null,
+              "constraint": "0~1 常用",
+              "desc": "B 分量。"
+            },
+            {
+              "path": "outputOptions.returnChannelBase64",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": true,
+              "constraint": null,
+              "desc": "是否返回每个灰度通道图片的 Base64。"
+            },
+            {
+              "path": "outputOptions.returnChannelStoredFiles",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": true,
+              "constraint": null,
+              "desc": "是否保存灰度通道图片；同时控制伪彩图片是否保存为服务端文件。"
             }
           ]
         }
@@ -857,6 +1391,126 @@
               "default": null,
               "constraint": "见下表",
               "desc": "输出控制。"
+            },
+            {
+              "path": "roiRenderParams.enabled",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": true,
+              "constraint": null,
+              "desc": "是否启用 ROI 渲染。独立 ROI_Render_API 调用时通常不需要传 false。"
+            },
+            {
+              "path": "roiRenderParams.renderContour",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": true,
+              "constraint": null,
+              "desc": "是否绘制 ROI 轮廓。"
+            },
+            {
+              "path": "roiRenderParams.renderMaskOverlay",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "是否绘制半透明 ROI 蒙版。"
+            },
+            {
+              "path": "roiRenderParams.overlayAlpha",
+              "type": "number",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": 0.35,
+              "constraint": "0~1",
+              "desc": "半透明蒙版透明度。仅 `renderMaskOverlay=true` 时生效。"
+            },
+            {
+              "path": "roiRenderParams.contourColor",
+              "type": "string",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": "#FFFF00",
+              "constraint": "`#RRGGBB`、`R,G,B`、常见英文色名",
+              "desc": "ROI 轮廓和蒙版颜色。默认黄色。"
+            },
+            {
+              "path": "roiRenderParams.renderColor",
+              "type": "string",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": "同上",
+              "desc": "`contourColor` 的兼容别名。若同时提供，推荐以 `contourColor` 为准。"
+            },
+            {
+              "path": "roiRenderParams.color",
+              "type": "string",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": "同上",
+              "desc": "颜色兼容别名。"
+            },
+            {
+              "path": "roiRenderParams.contourWidthPixels",
+              "type": "integer",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": 2,
+              "constraint": ">=1",
+              "desc": "ROI 轮廓粗细，像素单位。"
+            },
+            {
+              "path": "outputOptions.returnRenderedImageStoredFile",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": true,
+              "constraint": null,
+              "desc": "是否保存并返回带 ROI 的渲染图。"
+            },
+            {
+              "path": "outputOptions.returnRenderedImageBase64",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "是否直接返回渲染图 Base64。"
+            },
+            {
+              "path": "outputOptions.returnRoiMaskStoredFile",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": true,
+              "constraint": null,
+              "desc": "是否保存并返回 ROI Mask 图。"
+            },
+            {
+              "path": "outputOptions.returnRoiMaskBase64",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "是否直接返回 ROI Mask Base64。"
             }
           ]
         }
@@ -915,6 +1569,16 @@
               "desc": "Workplan ID。"
             },
             {
+              "path": "stepId",
+              "type": "string",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": null,
+              "desc": "当前步骤 ID。"
+            },
+            {
               "path": "segmentationMethod",
               "type": "string",
               "required": true,
@@ -943,6 +1607,16 @@
               "desc": "执行动作。"
             },
             {
+              "path": "targetName",
+              "type": "string",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": null,
+              "desc": "目标名，当前分割服务主要透传。"
+            },
+            {
               "path": "inputResources",
               "type": "object",
               "required": true,
@@ -961,6 +1635,550 @@
               "default": null,
               "constraint": "见各分支",
               "desc": "分割参数。"
+            },
+            {
+              "path": "roiRenderParams",
+              "type": "object",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": "见 ROI 渲染参数表",
+              "desc": "ROI 自动渲染参数。"
+            },
+            {
+              "path": "outputOptions",
+              "type": "object",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": "见各分支",
+              "desc": "输出控制。"
+            },
+            {
+              "path": "roiRenderParams.renderImageResourceUuid",
+              "type": "string",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": "图片 storedFilename 或语义引用",
+              "desc": "被渲染的底图。"
+            },
+            {
+              "path": "roiRenderParams.renderImageBase64",
+              "type": "string",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": "Base64 或 data URL",
+              "desc": "直接传入底图。"
+            },
+            {
+              "path": "roiRenderParams.enabled",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": true,
+              "constraint": null,
+              "desc": "是否启用自动 ROI 渲染。"
+            },
+            {
+              "path": "roiRenderParams.renderContour",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": true,
+              "constraint": null,
+              "desc": "是否绘制 ROI 轮廓。"
+            },
+            {
+              "path": "roiRenderParams.renderMaskOverlay",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "是否绘制半透明 ROI 蒙版。"
+            },
+            {
+              "path": "roiRenderParams.overlayAlpha",
+              "type": "number",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": 0.35,
+              "constraint": "0~1",
+              "desc": "半透明蒙版透明度。"
+            },
+            {
+              "path": "roiRenderParams.contourColor",
+              "type": "string",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": "#FFFF00",
+              "constraint": "`#RRGGBB`、`R,G,B`、常见英文色名",
+              "desc": "ROI 轮廓与蒙版颜色。"
+            },
+            {
+              "path": "roiRenderParams.contourWidthPixels",
+              "type": "integer",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": 2,
+              "constraint": ">=1",
+              "desc": "ROI 轮廓粗细，像素单位。"
+            },
+            {
+              "path": "outputOptions.returnRoiRender",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "是否启用自动 ROI 渲染。"
+            },
+            {
+              "path": "outputOptions.returnRenderedImage",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "ROI 渲染启用兼容开关。"
+            },
+            {
+              "path": "outputOptions.returnRenderedImageStoredFile",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": true,
+              "constraint": null,
+              "desc": "是否保存并返回带 ROI 的渲染图。"
+            },
+            {
+              "path": "outputOptions.returnRenderedImageBase64",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "是否直接返回渲染图 Base64。"
+            },
+            {
+              "path": "outputOptions.returnRoiMaskStoredFile",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": true,
+              "constraint": null,
+              "desc": "是否保存并返回 ROI Mask 图。"
+            },
+            {
+              "path": "outputOptions.returnRoiMaskBase64",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "是否直接返回 ROI Mask Base64。"
+            }
+          ]
+        },
+        {
+          "label": "threshold: run_segmentation 请求参数",
+          "kind": "request",
+          "method": "threshold",
+          "operation": "run_segmentation",
+          "params": [
+            {
+              "path": "inputResources.sourceImageResourceUuid",
+              "type": "string",
+              "required": true,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": "图片 storedFilename 或语义引用",
+              "desc": "阈值分割输入灰度/图片资源。"
+            },
+            {
+              "path": "params.imagePreprocess",
+              "type": "object",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": null,
+              "desc": "灰度预处理参数。"
+            },
+            {
+              "path": "params.imagePreprocess.smooth",
+              "type": "number",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": 0.0,
+              "constraint": null,
+              "desc": "平滑次数/强度。"
+            },
+            {
+              "path": "params.imagePreprocess.sharp",
+              "type": "number",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": 0.0,
+              "constraint": null,
+              "desc": "锐化次数/强度。"
+            },
+            {
+              "path": "params.imagePreprocess.blur",
+              "type": "number",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": 0.0,
+              "constraint": null,
+              "desc": "高斯模糊 sigma/强度。"
+            },
+            {
+              "path": "params.imagePreprocess.invert",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "是否反相。"
+            },
+            {
+              "path": "params.thresholdParams.thresholdMin",
+              "type": "integer",
+              "required": true,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": "0~255",
+              "desc": "阈值下限。"
+            },
+            {
+              "path": "params.thresholdParams.thresholdMax",
+              "type": "integer",
+              "required": true,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": "0~255，且 >= thresholdMin",
+              "desc": "阈值上限。"
+            },
+            {
+              "path": "outputOptions.returnPreprocessedImage",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "是否返回预处理图。"
+            },
+            {
+              "path": "outputOptions.returnBinaryImage",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": true,
+              "constraint": null,
+              "desc": "是否返回二值图。"
+            }
+          ]
+        },
+        {
+          "label": "threshold: postprocess_binary_and_analyze / analyze_particles 请求参数",
+          "kind": "request",
+          "method": "threshold",
+          "operation": "postprocess_binary_and_analyze",
+          "params": [
+            {
+              "path": "inputResources.binaryImageResourceUuid",
+              "type": "string",
+              "required": true,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": "二值图 storedFilename 或语义引用",
+              "desc": "二值图输入。"
+            },
+            {
+              "path": "params.binaryPostprocess",
+              "type": "object",
+              "required": false,
+              "required_note": "postprocess_binary_and_analyze 时可选",
+              "enum": null,
+              "default": null,
+              "constraint": null,
+              "desc": "二值图后处理。"
+            },
+            {
+              "path": "params.binaryPostprocess.fillHole",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "是否填洞。"
+            },
+            {
+              "path": "params.binaryPostprocess.watershed",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "是否 watershed 分割粘连区域。"
+            },
+            {
+              "path": "params.analyzeParticlesParams",
+              "type": "object",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": null,
+              "desc": "Analyze Particles 参数；缺省使用默认值。"
+            },
+            {
+              "path": "params.analyzeParticlesParams.sizeMin",
+              "type": "number",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": 20.0,
+              "constraint": null,
+              "desc": "最小面积。"
+            },
+            {
+              "path": "params.analyzeParticlesParams.sizeMax",
+              "type": "number",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": 2000.0,
+              "constraint": null,
+              "desc": "最大面积。"
+            },
+            {
+              "path": "params.analyzeParticlesParams.circularityMin",
+              "type": "number",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": 0.2,
+              "constraint": null,
+              "desc": "最小圆度。"
+            },
+            {
+              "path": "params.analyzeParticlesParams.circularityMax",
+              "type": "number",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": 1.0,
+              "constraint": null,
+              "desc": "最大圆度。"
+            },
+            {
+              "path": "params.analyzeParticlesParams.excludeOnEdges",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "是否排除边缘颗粒。"
+            },
+            {
+              "path": "params.analyzeParticlesParams.includeHoles",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "是否包含孔洞。"
+            },
+            {
+              "path": "outputOptions.returnPostprocessedBinary",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": true,
+              "constraint": null,
+              "desc": "是否返回后处理二值图。"
+            },
+            {
+              "path": "outputOptions.returnRoiZip",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": true,
+              "constraint": null,
+              "desc": "是否返回 ROI zip。"
+            }
+          ]
+        },
+        {
+          "label": "threshold: postprocess_binary_and_analyze / analyze_particles 请求参数",
+          "kind": "request",
+          "method": "threshold",
+          "operation": "analyze_particles",
+          "params": [
+            {
+              "path": "inputResources.binaryImageResourceUuid",
+              "type": "string",
+              "required": true,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": "二值图 storedFilename 或语义引用",
+              "desc": "二值图输入。"
+            },
+            {
+              "path": "params.binaryPostprocess",
+              "type": "object",
+              "required": false,
+              "required_note": "postprocess_binary_and_analyze 时可选",
+              "enum": null,
+              "default": null,
+              "constraint": null,
+              "desc": "二值图后处理。"
+            },
+            {
+              "path": "params.binaryPostprocess.fillHole",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "是否填洞。"
+            },
+            {
+              "path": "params.binaryPostprocess.watershed",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "是否 watershed 分割粘连区域。"
+            },
+            {
+              "path": "params.analyzeParticlesParams",
+              "type": "object",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": null,
+              "desc": "Analyze Particles 参数；缺省使用默认值。"
+            },
+            {
+              "path": "params.analyzeParticlesParams.sizeMin",
+              "type": "number",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": 20.0,
+              "constraint": null,
+              "desc": "最小面积。"
+            },
+            {
+              "path": "params.analyzeParticlesParams.sizeMax",
+              "type": "number",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": 2000.0,
+              "constraint": null,
+              "desc": "最大面积。"
+            },
+            {
+              "path": "params.analyzeParticlesParams.circularityMin",
+              "type": "number",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": 0.2,
+              "constraint": null,
+              "desc": "最小圆度。"
+            },
+            {
+              "path": "params.analyzeParticlesParams.circularityMax",
+              "type": "number",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": 1.0,
+              "constraint": null,
+              "desc": "最大圆度。"
+            },
+            {
+              "path": "params.analyzeParticlesParams.excludeOnEdges",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "是否排除边缘颗粒。"
+            },
+            {
+              "path": "params.analyzeParticlesParams.includeHoles",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": false,
+              "constraint": null,
+              "desc": "是否包含孔洞。"
+            },
+            {
+              "path": "outputOptions.returnPostprocessedBinary",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": true,
+              "constraint": null,
+              "desc": "是否返回后处理二值图。"
+            },
+            {
+              "path": "outputOptions.returnRoiZip",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": true,
+              "constraint": null,
+              "desc": "是否返回 ROI zip。"
             }
           ]
         },
@@ -995,11 +2213,9 @@
               "type": "string",
               "required": false,
               "required_note": null,
-              "enum": [
-                "zhijing_if_nuclei"
-              ],
+              "enum": null,
               "default": null,
-              "constraint": null,
+              "constraint": "例如 `zhijing_if_nuclei`",
               "desc": "Cellpose 模型名。"
             },
             {
@@ -1040,7 +2256,7 @@
               "enum": null,
               "default": null,
               "constraint": null,
-              "desc": "cellprob 扫描下限。"
+              "desc": "cellprob threshold 扫描下限。"
             },
             {
               "path": "params.cellposeParams.cellprobThreshold.max",
@@ -1050,7 +2266,7 @@
               "enum": null,
               "default": null,
               "constraint": null,
-              "desc": "cellprob 扫描上限。"
+              "desc": "cellprob threshold 扫描上限。"
             },
             {
               "path": "outputOptions.returnRoiZip",
@@ -1058,67 +2274,77 @@
               "required": false,
               "required_note": null,
               "enum": null,
-              "default": true,
+              "default": null,
               "constraint": null,
               "desc": "是否返回 ROI zip 引用。"
             }
           ]
         },
         {
-          "label": "threshold: analyze_particles 请求参数",
+          "label": "weka: run_segmentation 请求参数",
           "kind": "request",
-          "method": "threshold",
-          "operation": "analyze_particles",
+          "method": "weka",
+          "operation": "run_segmentation",
           "params": [
             {
-              "path": "inputResources.binaryImageResourceUuid",
+              "path": "inputResources.sourceImageResourceUuid",
               "type": "string",
               "required": true,
               "required_note": null,
               "enum": null,
               "default": null,
-              "constraint": "storedFilename",
-              "desc": "二值图资源。"
+              "constraint": "图片 storedFilename 或语义引用",
+              "desc": "Weka 输入图片。"
             },
             {
-              "path": "params.analyzeParticlesParams.sizeMin",
-              "type": "number",
-              "required": false,
+              "path": "inputResources.classifierResourceUuid",
+              "type": "string",
+              "required": true,
               "required_note": null,
               "enum": null,
-              "default": 20.0,
-              "constraint": null,
-              "desc": "最小面积。"
+              "default": null,
+              "constraint": "Weka classifier 文件 storedFilename",
+              "desc": "已训练分类器文件。"
             },
             {
-              "path": "params.analyzeParticlesParams.sizeMax",
-              "type": "number",
-              "required": false,
-              "required_note": null,
-              "enum": null,
-              "default": 2000.0,
-              "constraint": null,
-              "desc": "最大面积。"
-            },
-            {
-              "path": "params.analyzeParticlesParams.circularityMin",
-              "type": "number",
-              "required": false,
-              "required_note": null,
-              "enum": null,
-              "default": 0.2,
-              "constraint": null,
-              "desc": "最小圆度。"
-            },
-            {
-              "path": "params.analyzeParticlesParams.excludeOnEdges",
+              "path": "params.wekaParams.returnProbability",
               "type": "boolean",
               "required": false,
               "required_note": null,
               "enum": null,
               "default": false,
               "constraint": null,
-              "desc": "是否排除边缘颗粒。"
+              "desc": "是否返回概率图。"
+            },
+            {
+              "path": "params.wekaParams.selectedClassIndex",
+              "type": "integer",
+              "required": false,
+              "required_note": "returnProbability=true 时建议提供",
+              "enum": null,
+              "default": 1,
+              "constraint": null,
+              "desc": "选择概率栈中的类别索引。"
+            },
+            {
+              "path": "outputOptions.returnResultImage",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": null,
+              "desc": "是否保存结果图。"
+            },
+            {
+              "path": "outputOptions.returnResultImageBase64",
+              "type": "boolean",
+              "required": false,
+              "required_note": null,
+              "enum": null,
+              "default": null,
+              "constraint": null,
+              "desc": "是否返回结果图 Base64。"
             }
           ]
         }

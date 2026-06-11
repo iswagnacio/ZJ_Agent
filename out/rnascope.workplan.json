@@ -1,0 +1,303 @@
+{
+  "experimentName": "RNAScope探针点数量分级统计",
+  "inputMode": "single_rgb_merged_image",
+  "analysisGoal": "统计双荧光图像中每个细胞核内的RNAScope探针点数量，并按阈值分级统计探针数1-4个（tg2）和5-20个（tg3）的细胞数量。",
+  "imageInference": {
+    "imageModality": "fluorescence",
+    "experimentType": "cellular_analysis,rnascope_probe_quantification,cell_classification_analysis",
+    "reasoning": [
+      "图像为双荧光染色RGB合并图，红色通道为RNAScope探针信号，蓝色通道为DAPI标记细胞核，绿色通道无使用需求，按荧光图像执行RGB通道拆分。",
+      "先通过Cellpose在DAPI通道分割所有细胞核作为基础父target，再基于细胞核区域在红色通道内检测探针点数量。",
+      "严格遵循用户给定的分级标准，将细胞按探针数分为1-4个（tg2）和5-20个（tg3）两类分别统计。"
+    ]
+  },
+  "workplanSceneType": "target_based_analysis",
+  "channels": [
+    {
+      "channelId": "ch0",
+      "channelName": "RNAScope探针通道",
+      "semanticRole": "rnascope_probe_channel"
+    },
+    {
+      "channelId": "ch1",
+      "channelName": "未使用绿色通道",
+      "semanticRole": "unused_or_background_channel"
+    },
+    {
+      "channelId": "ch2",
+      "channelName": "DAPI细胞核通道",
+      "semanticRole": "nucleus_marker"
+    }
+  ],
+  "targets": [
+    {
+      "targetName": "tg1",
+      "targetType": "nucleus",
+      "description": "DAPI通道经Cellpose分割得到的所有细胞核ROI集合，作为探针点计数的父区域。"
+    },
+    {
+      "targetName": "tg2",
+      "targetType": "rnascope_positive_cell_level1",
+      "description": "细胞核内RNAScope探针点数量为1到4个的细胞ROI集合。"
+    },
+    {
+      "targetName": "tg3",
+      "targetType": "rnascope_positive_cell_level2",
+      "description": "细胞核内RNAScope探针点数量为5到20个的细胞ROI集合。"
+    }
+  ],
+  "jobs": [
+    {
+      "jobId": "job_00",
+      "jobName": "RGB荧光通道拆分",
+      "jobType": "pic_split",
+      "stepDescript": "将输入的双荧光RGB合并图拆分为RNAScope探针红色通道、未使用绿色通道、DAPI细胞核蓝色通道。",
+      "inputs": {
+        "imageModality": "fluorescence",
+        "sourceImageType": "single_rgb_merged_image"
+      },
+      "outputs": {
+        "generatedChannels": [
+          "ch0",
+          "ch1",
+          "ch2"
+        ]
+      },
+      "picSplitPlan": {
+        "splitMethod": "rgb_split",
+        "channelMapping": {
+          "ch0": "RNAScope探针通道",
+          "ch1": "未使用绿色通道",
+          "ch2": "DAPI细胞核通道"
+        },
+        "recommended": true,
+        "outputOptions": {
+          "returnChannelStoredFiles": true,
+          "returnChannelBase64": false,
+          "returnChannelPseudoBase64": true
+        }
+      }
+    },
+    {
+      "jobId": "job_01",
+      "jobName": "建立全细胞核target tg1",
+      "jobType": "create_target",
+      "stepDescript": "在DAPI细胞核通道上使用Cellpose分割所有细胞核，建立基础细胞核target tg1。",
+      "inputs": {
+        "channelId": [
+          "ch2"
+        ],
+        "sourceTargetNames": []
+      },
+      "outputs": {
+        "targetName": "tg1"
+      },
+      "createTargetPlan": {
+        "recommendedSegmentMethod": "cellpose",
+        "segmentMethodReason": "Cellpose对荧光图像细胞核分割准确率高，适合作为RNAScope探针计数的父区域分割方法。",
+        "sourceTargetNames": [],
+        "variant": [],
+        "variantReasoning": "tg1为DAPI通道直接分割得到的基础细胞核target，无需生成空间变体。",
+        "measureOn": [],
+        "measureFeatures": [],
+        "filterConditions": [],
+        "filterBasis": "",
+        "cellposeParams": {
+          "model": "zhijing_if_nuclei",
+          "diameter": 25,
+          "flowThreshold": {
+            "min": 0.0,
+            "max": 1.0
+          },
+          "cellprobThreshold": {
+            "min": -6.0,
+            "max": 6.0
+          }
+        },
+        "imagePreprocess": {
+          "smooth": 0,
+          "blur": 0,
+          "sharp": 0,
+          "invert": false
+        }
+      }
+    },
+    {
+      "jobId": "job_02",
+      "jobName": "建立探针数1-4个的细胞target tg2",
+      "jobType": "create_target",
+      "stepDescript": "基于tg1细胞核集合，在红色RNAScope探针通道检测每个细胞核内的探针点数量，筛选探针数1-4个的细胞建立tg2。",
+      "inputs": {
+        "channelId": [
+          "ch0"
+        ],
+        "sourceTargetNames": [
+          "tg1"
+        ]
+      },
+      "outputs": {
+        "targetName": "tg2"
+      },
+      "createTargetPlan": {
+        "recommendedSegmentMethod": "rnascope",
+        "segmentMethodReason": "RNAScope模式专门用于统计细胞核内的探针点数量，可准确检测离散的点状荧光信号。",
+        "sourceTargetNames": [
+          "tg1"
+        ],
+        "variant": [],
+        "variantReasoning": "tg2为基于tg1按探针数筛选得到的细胞target，无需生成空间变体。",
+        "measureOn": [
+          "ch0"
+        ],
+        "measureFeatures": [
+          "PIN_COUNT"
+        ],
+        "filterConditions": [
+          {
+            "channelId": "ch0",
+            "feature": "PIN_COUNT",
+            "operator": "between",
+            "threshold": {
+              "min": 1,
+              "max": 4
+            },
+            "reason": "用户指定分级标准，细胞核内探针数量1-4个为tg2"
+          }
+        ],
+        "filterBasis": "按细胞核内RNAScope探针点计数结果筛选",
+        "rnascope": {
+          "thresholdParams": {
+            "thresholdMin": 20,
+            "thresholdMax": 255
+          },
+          "detectpinParams": {
+            "detectpinMin": 1,
+            "detectpinMax": 10
+          },
+          "prominence": 0.5,
+          "lightBackground": false
+        }
+      }
+    },
+    {
+      "jobId": "job_03",
+      "jobName": "建立探针数5-20个的细胞target tg3",
+      "jobType": "create_target",
+      "stepDescript": "基于tg1细胞核集合，在红色RNAScope探针通道检测每个细胞核内的探针点数量，筛选探针数5-20个的细胞建立tg3。",
+      "inputs": {
+        "channelId": [
+          "ch0"
+        ],
+        "sourceTargetNames": [
+          "tg1"
+        ]
+      },
+      "outputs": {
+        "targetName": "tg3"
+      },
+      "createTargetPlan": {
+        "recommendedSegmentMethod": "rnascope",
+        "segmentMethodReason": "RNAScope模式专门用于统计细胞核内的探针点数量，可准确检测离散的点状荧光信号。",
+        "sourceTargetNames": [
+          "tg1"
+        ],
+        "variant": [],
+        "variantReasoning": "tg3为基于tg1按探针数筛选得到的细胞target，无需生成空间变体。",
+        "measureOn": [
+          "ch0"
+        ],
+        "measureFeatures": [
+          "PIN_COUNT"
+        ],
+        "filterConditions": [
+          {
+            "channelId": "ch0",
+            "feature": "PIN_COUNT",
+            "operator": "between",
+            "threshold": {
+              "min": 5,
+              "max": 20
+            },
+            "reason": "用户指定分级标准，细胞核内探针数量5-20个为tg3"
+          }
+        ],
+        "filterBasis": "按细胞核内RNAScope探针点计数结果筛选",
+        "rnascope": {
+          "thresholdParams": {
+            "thresholdMin": 20,
+            "thresholdMax": 255
+          },
+          "detectpinParams": {
+            "detectpinMin": 1,
+            "detectpinMax": 10
+          },
+          "prominence": 0.5,
+          "lightBackground": false
+        }
+      }
+    },
+    {
+      "jobId": "job_99",
+      "jobName": "探针数量分级统计",
+      "jobType": "formula",
+      "stepDescript": "统计总细胞数、tg2和tg3的细胞数量，输出分级统计结果。",
+      "inputs": {
+        "targetInputs": [
+          {
+            "targetName": "tg1",
+            "metric": "COUNT",
+            "role": "total_cell_count"
+          },
+          {
+            "targetName": "tg2",
+            "metric": "COUNT",
+            "role": "tg2_cell_count"
+          },
+          {
+            "targetName": "tg3",
+            "metric": "COUNT",
+            "role": "tg3_cell_count"
+          }
+        ]
+      },
+      "outputs": {
+        "resultName": "rnascope_probe_grade_summary"
+      },
+      "formulaPlan": {
+        "expression": "totalCellCount = tg1.COUNT; tg2Count = tg2.COUNT; tg3Count = tg3.COUNT; tg2Ratio = tg2Count / totalCellCount; tg3Ratio = tg3Count / totalCellCount",
+        "reportFields": [
+          {
+            "fieldName": "totalCellCount",
+            "displayName": "总细胞数",
+            "unit": "个",
+            "description": "DAPI通道分割得到的所有细胞核数量，代表参与统计的总细胞数。"
+          },
+          {
+            "fieldName": "tg2Count",
+            "displayName": "探针数1-4个的细胞数",
+            "unit": "个",
+            "description": "细胞核内RNAScope探针数量为1到4个的细胞总数。"
+          },
+          {
+            "fieldName": "tg3Count",
+            "displayName": "探针数5-20个的细胞数",
+            "unit": "个",
+            "description": "细胞核内RNAScope探针数量为5到20个的细胞总数。"
+          },
+          {
+            "fieldName": "tg2Ratio",
+            "displayName": "探针数1-4个的细胞占比",
+            "unit": "%",
+            "description": "探针数1-4个的细胞数占总细胞数的比例，保留2位小数。"
+          },
+          {
+            "fieldName": "tg3Ratio",
+            "displayName": "探针数5-20个的细胞占比",
+            "unit": "%",
+            "description": "探针数5-20个的细胞数占总细胞数的比例，保留2位小数。"
+          }
+        ]
+      }
+    }
+  ]
+}

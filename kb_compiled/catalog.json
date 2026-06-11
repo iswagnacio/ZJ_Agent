@@ -19,7 +19,8 @@
         ],
         "methods": [
           "cellpose",
-          "threshold"
+          "threshold",
+          "weka"
         ]
       }
     ],
@@ -46,7 +47,7 @@
     "calculate": [
       {
         "name": "Formula_API_v10",
-        "purpose": "当需要产出最终报表/答案——对最终 target 的计数、比例、OD/IOD 等计算量或比值——时使用。",
+        "purpose": "当最终结果是对已测量 target 的计算量或比值（计数、比例、OD/IOD 等），需要把测量值汇总成报表/答案时使用。",
         "endpoints": [
           "POST /api/v10/formula/run"
         ],

@@ -67,32 +67,9 @@ _API_HEADER_RE = re.compile(r"^##\s+(\S+)\s+\[stage:")
 # Schema helpers
 # --------------------------------------------------------------------------------------
 
-def _merge_schemas(base: Optional[dict], branch: Optional[dict]) -> dict:
-    """Compose base (common) + branch (method-specific) into one object schema.
-
-    Branch wins on overlapping properties (its specific ``inputResources``/``params``
-    override the base's opaque ones); ``required`` is the union; ``$defs`` are merged.
-    """
-    if base and not branch:
-        return copy.deepcopy(base)
-    if branch and not base:
-        return copy.deepcopy(branch)
-
-    merged: Dict[str, Any] = {"type": "object", "properties": {}, "required": [], "$defs": {}}
-    titles: List[str] = []
-    for s in (base, branch):  # base first so branch overrides on conflicts
-        merged["$defs"].update(s.get("$defs", {}))
-        merged["properties"].update(s.get("properties", {}))
-        for r in s.get("required", []):
-            if r not in merged["required"]:
-                merged["required"].append(r)
-        if s.get("title"):
-            titles.append(s["title"])
-    if not merged["$defs"]:
-        merged.pop("$defs")
-    merged["title"] = "+".join(titles)
-    return merged
-
+# NOTE: common + branch composition happens at BUILD time (in the compiler), so each
+# method:operation group in models_jsonschema.json is already a complete request schema.
+# The provider just selects the right group — no runtime merge.
 
 def _inline_refs(schema: dict, _max_depth: int = 32) -> dict:
     """Return an equivalent schema with internal ``$ref``/``$defs`` inlined.
@@ -192,41 +169,40 @@ class KnowledgeProvider:
 
     def get_param_schema(self, api_name: str, method: Optional[str] = None,
                          operation: Optional[str] = None, *, inline_refs: bool = False) -> dict:
-        """Composed JSON Schema for one API call.
+        """Complete JSON Schema for one API call.
 
-        Resolves the base group + the (method, operation) branch and merges them. If no
-        branch matches the given method/operation, returns the base group alone (envelope
-        validation only) and logs a warning — that path covers stub methods like ``weka``.
+        Branch groups are already composed (common + branch) at build time, so this just
+        selects: the matching (method, operation) branch if present, else the base/common
+        group. A method/operation with no branch group falls back to the base group
+        (envelope-only validation) with a warning — that path covers stub methods.
         """
         if api_name not in self._models:
             raise KeyError(f"unknown API {api_name!r}; known: {self.list_apis()}")
         groups: Dict[str, dict] = self._models[api_name]["groups"]
 
-        base_key = next((k for k in _BASE_GROUP_KEYS if k in groups), None)
-
-        branch_key: Optional[str] = None
+        chosen: Optional[str] = None
         if method:
             candidate = f"{method}:{operation}" if operation else method
             if candidate in groups:
-                branch_key = candidate
+                chosen = candidate
             elif method in groups:           # dual-endpoint docs key by HTTP verb (GET/POST)
-                branch_key = method
-            else:
-                log.warning(
-                    "%s: no schema group for method=%r operation=%r; "
-                    "validating against base group %r only",
-                    api_name, method, operation, base_key)
+                chosen = method
 
-        if base_key is None and branch_key is None:
-            if len(groups) == 1:             # single non-standard group label
-                base_key = next(iter(groups))
-            else:                            # e.g. GET/POST with no method passed
-                raise KeyError(
-                    f"{api_name}: ambiguous — pass method (and operation). "
-                    f"available groups: {list(groups)}")
+        if chosen is None:                   # fall back to the common/base group
+            chosen = next((k for k in _BASE_GROUP_KEYS if k in groups), None)
+            if chosen is None:
+                if len(groups) == 1:         # single non-standard group label
+                    chosen = next(iter(groups))
+                else:                        # e.g. GET/POST with no method passed
+                    raise KeyError(
+                        f"{api_name}: ambiguous — pass method (and operation). "
+                        f"available groups: {list(groups)}")
+            if method:
+                log.warning("%s: no composed schema for method=%r operation=%r; "
+                            "using base group %r (envelope only)",
+                            api_name, method, operation, chosen)
 
-        schema = _merge_schemas(groups.get(base_key) if base_key else None,
-                                groups.get(branch_key) if branch_key else None)
+        schema = copy.deepcopy(groups[chosen])
         return _inline_refs(schema) if inline_refs else schema
 
     def validate_payload(self, api_name: str, payload: dict,

@@ -1,0 +1,356 @@
+{
+  "experimentName": "SMA染色H-score分析",
+  "inputMode": "single_rgb_brightfield_image",
+  "analysisGoal": "计算明场IHC切片中SMA染色的H-score得分，得分范围0~300",
+  "imageInference": {
+    "imageModality": "brightfield_ihc",
+    "experimentType": "ihc_staining_analysis,h_score_analysis,color_deconvolution_analysis,area_analysis",
+    "reasoning": [
+      "图像为明场IHC染色切片，棕色为SMA的DAB阳性信号，蓝色为苏木素复染，采用H DAB预设矩阵进行颜色反卷积拆分通道",
+      "先分割得到全部有效组织区域作为统计参考总区域，再按DAB通道信号强度划分为弱阳、中阳、强阳三个等级的阳性区域",
+      "按公式H-score = 弱阳占比×1 + 中阳占比×2 + 强阳占比×3计算最终得分，得分范围0~300"
+    ]
+  },
+  "workplanSceneType": "target_based_analysis",
+  "channels": [
+    {
+      "channelId": "ch0",
+      "channelName": "DAB(SMA)通道",
+      "semanticRole": "dab_staining_channel"
+    },
+    {
+      "channelId": "ch1",
+      "channelName": "苏木素通道",
+      "semanticRole": "hematoxylin_staining_channel"
+    },
+    {
+      "channelId": "ch2",
+      "channelName": "背景残留通道",
+      "semanticRole": "residual_background_channel"
+    }
+  ],
+  "targets": [
+    {
+      "targetName": "total_tissue_region",
+      "targetType": "tissue_region",
+      "description": "整张切片中排除空白背景的有效组织区域，作为统计参考总区域"
+    },
+    {
+      "targetName": "sma_low_positive",
+      "targetType": "staining_positive_region",
+      "description": "SMA DAB染色信号强度为弱阳的区域"
+    },
+    {
+      "targetName": "sma_mid_positive",
+      "targetType": "staining_positive_region",
+      "description": "SMA DAB染色信号强度为中阳的区域"
+    },
+    {
+      "targetName": "sma_high_positive",
+      "targetType": "staining_positive_region",
+      "description": "SMA DAB染色信号强度为强阳的区域"
+    }
+  ],
+  "jobs": [
+    {
+      "jobId": "job_00",
+      "jobName": "H DAB颜色反卷积",
+      "jobType": "pic_split",
+      "stepDescript": "对输入的SMA IHC明场染色图执行H DAB颜色反卷积，拆分DAB(SMA)、苏木素和背景残留通道",
+      "inputs": {
+        "imageModality": "brightfield_ihc",
+        "sourceImageType": "single_rgb_brightfield_image"
+      },
+      "outputs": {
+        "generatedChannels": [
+          "ch0",
+          "ch1",
+          "ch2"
+        ]
+      },
+      "picSplitPlan": {
+        "splitMethod": "color_deconvolution",
+        "colorDeconvParams": {
+          "matrix": "H DAB"
+        },
+        "channelMapping": {
+          "ch0": "DAB(SMA)通道",
+          "ch1": "苏木素通道",
+          "ch2": "背景残留通道"
+        },
+        "recommended": true,
+        "outputOptions": {
+          "returnChannelStoredFiles": true,
+          "returnChannelBase64": false
+        }
+      }
+    },
+    {
+      "jobId": "job_01",
+      "jobName": "建立总有效组织区域target",
+      "jobType": "create_target",
+      "stepDescript": "合并DAB和苏木素通道信号，阈值分割得到全部有效组织区域，排除空白背景",
+      "inputs": {
+        "channelId": [
+          "ch0",
+          "ch1"
+        ],
+        "sourceTargetNames": []
+      },
+      "outputs": {
+        "targetName": "total_tissue_region"
+      },
+      "createTargetPlan": {
+        "recommendedSegmentMethod": "threshold",
+        "segmentMethodReason": "有效组织区域在DAB和苏木素通道均有染色信号，使用阈值分割可有效区分组织与空白背景",
+        "sourceTargetNames": [],
+        "variant": [],
+        "variantReasoning": "总组织区域由通道直接阈值分割得到，无需生成空间变体",
+        "measureOn": [],
+        "measureFeatures": [],
+        "filterConditions": [],
+        "filterBasis": "",
+        "thresholdParams": {
+          "thresholdMin": 0,
+          "thresholdMax": 220
+        },
+        "imagePreprocess": {
+          "smooth": 0,
+          "blur": 2,
+          "sharp": 0,
+          "invert": false
+        },
+        "binaryPostprocess": {
+          "fillHole": true,
+          "watershed": false
+        },
+        "analyzeParticlesParams": {
+          "sizeMin": 100.0,
+          "sizeMax": 10000000,
+          "circularityMin": 0.0,
+          "circularityMax": 1.0,
+          "excludeOnEdges": false,
+          "includeHoles": true
+        }
+      }
+    },
+    {
+      "jobId": "job_02",
+      "jobName": "建立SMA弱阳区域target",
+      "jobType": "create_target",
+      "stepDescript": "在DAB(SMA)通道上使用低强度阈值分割弱阳阳性区域",
+      "inputs": {
+        "channelId": [
+          "ch0"
+        ],
+        "sourceTargetNames": [
+          "total_tissue_region"
+        ]
+      },
+      "outputs": {
+        "targetName": "sma_low_positive"
+      },
+      "createTargetPlan": {
+        "recommendedSegmentMethod": "threshold",
+        "segmentMethodReason": "弱阳信号对应DAB通道中等偏低灰度范围，使用阈值分割提取对应区域",
+        "sourceTargetNames": [
+          "total_tissue_region"
+        ],
+        "variant": [],
+        "variantReasoning": "弱阳区域仅在总组织区域范围内分割，无需额外空间变体",
+        "measureOn": [],
+        "measureFeatures": [],
+        "filterConditions": [],
+        "filterBasis": "",
+        "thresholdParams": {
+          "thresholdMin": 80,
+          "thresholdMax": 140
+        },
+        "imagePreprocess": {
+          "smooth": 0,
+          "blur": 0,
+          "sharp": 0,
+          "invert": false
+        },
+        "binaryPostprocess": {
+          "fillHole": true,
+          "watershed": false
+        },
+        "analyzeParticlesParams": {
+          "sizeMin": 0.0,
+          "sizeMax": 10000000,
+          "circularityMin": 0.0,
+          "circularityMax": 1.0,
+          "excludeOnEdges": false,
+          "includeHoles": true
+        }
+      }
+    },
+    {
+      "jobId": "job_03",
+      "jobName": "建立SMA中阳区域target",
+      "jobType": "create_target",
+      "stepDescript": "在DAB(SMA)通道上使用中等强度阈值分割中阳阳性区域",
+      "inputs": {
+        "channelId": [
+          "ch0"
+        ],
+        "sourceTargetNames": [
+          "total_tissue_region"
+        ]
+      },
+      "outputs": {
+        "targetName": "sma_mid_positive"
+      },
+      "createTargetPlan": {
+        "recommendedSegmentMethod": "threshold",
+        "segmentMethodReason": "中阳信号对应DAB通道中等灰度范围，使用阈值分割提取对应区域",
+        "sourceTargetNames": [
+          "total_tissue_region"
+        ],
+        "variant": [],
+        "variantReasoning": "中阳区域仅在总组织区域范围内分割，无需额外空间变体",
+        "measureOn": [],
+        "measureFeatures": [],
+        "filterConditions": [],
+        "filterBasis": "",
+        "thresholdParams": {
+          "thresholdMin": 141,
+          "thresholdMax": 200
+        },
+        "imagePreprocess": {
+          "smooth": 0,
+          "blur": 0,
+          "sharp": 0,
+          "invert": false
+        },
+        "binaryPostprocess": {
+          "fillHole": true,
+          "watershed": false
+        },
+        "analyzeParticlesParams": {
+          "sizeMin": 0.0,
+          "sizeMax": 10000000,
+          "circularityMin": 0.0,
+          "circularityMax": 1.0,
+          "excludeOnEdges": false,
+          "includeHoles": true
+        }
+      }
+    },
+    {
+      "jobId": "job_04",
+      "jobName": "建立SMA强阳区域target",
+      "jobType": "create_target",
+      "stepDescript": "在DAB(SMA)通道上使用高强度阈值分割强阳阳性区域",
+      "inputs": {
+        "channelId": [
+          "ch0"
+        ],
+        "sourceTargetNames": [
+          "total_tissue_region"
+        ]
+      },
+      "outputs": {
+        "targetName": "sma_high_positive"
+      },
+      "createTargetPlan": {
+        "recommendedSegmentMethod": "threshold",
+        "segmentMethodReason": "强阳信号对应DAB通道高灰度范围，使用阈值分割提取对应区域",
+        "sourceTargetNames": [
+          "total_tissue_region"
+        ],
+        "variant": [],
+        "variantReasoning": "强阳区域仅在总组织区域范围内分割，无需额外空间变体",
+        "measureOn": [],
+        "measureFeatures": [],
+        "filterConditions": [],
+        "filterBasis": "",
+        "thresholdParams": {
+          "thresholdMin": 201,
+          "thresholdMax": 255
+        },
+        "imagePreprocess": {
+          "smooth": 0,
+          "blur": 0,
+          "sharp": 0,
+          "invert": false
+        },
+        "binaryPostprocess": {
+          "fillHole": true,
+          "watershed": false
+        },
+        "analyzeParticlesParams": {
+          "sizeMin": 0.0,
+          "sizeMax": 10000000,
+          "circularityMin": 0.0,
+          "circularityMax": 1.0,
+          "excludeOnEdges": false,
+          "includeHoles": true
+        }
+      }
+    },
+    {
+      "jobId": "job_99",
+      "jobName": "计算SMA染色H-score",
+      "jobType": "formula",
+      "stepDescript": "统计各强度等级阳性区域占总组织区域的比例，代入公式计算H-score得分",
+      "inputs": {
+        "targetInputs": [
+          {
+            "targetName": "total_tissue_region",
+            "metric": "AREA_SUM",
+            "role": "total_tissue_area"
+          },
+          {
+            "targetName": "sma_low_positive",
+            "metric": "AREA_SUM",
+            "role": "low_positive_area"
+          },
+          {
+            "targetName": "sma_mid_positive",
+            "metric": "AREA_SUM",
+            "role": "mid_positive_area"
+          },
+          {
+            "targetName": "sma_high_positive",
+            "metric": "AREA_SUM",
+            "role": "high_positive_area"
+          }
+        ]
+      },
+      "outputs": {
+        "resultName": "sma_h_score_result"
+      },
+      "formulaPlan": {
+        "expression": "low_ratio = sma_low_positive.AREA_SUM / total_tissue_region.AREA_SUM * 100; mid_ratio = sma_mid_positive.AREA_SUM / total_tissue_region.AREA_SUM * 100; high_ratio = sma_high_positive.AREA_SUM / total_tissue_region.AREA_SUM * 100; h_score = low_ratio * 1 + mid_ratio * 2 + high_ratio * 3",
+        "reportFields": [
+          {
+            "fieldName": "low_ratio",
+            "displayName": "弱阳区域占比",
+            "unit": "%",
+            "description": "SMA弱阳区域面积占总有效组织区域面积的百分比"
+          },
+          {
+            "fieldName": "mid_ratio",
+            "displayName": "中阳区域占比",
+            "unit": "%",
+            "description": "SMA中阳区域面积占总有效组织区域面积的百分比"
+          },
+          {
+            "fieldName": "high_ratio",
+            "displayName": "强阳区域占比",
+            "unit": "%",
+            "description": "SMA强阳区域面积占总有效组织区域面积的百分比"
+          },
+          {
+            "fieldName": "h_score",
+            "displayName": "H-score得分",
+            "unit": "分",
+            "description": "SMA染色H-score最终得分，范围0~300"
+          }
+        ]
+      }
+    }
+  ]
+}
