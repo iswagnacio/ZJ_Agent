@@ -1,13 +1,14 @@
 """
-Orchestrator - ties Clarifier → Generator → (future: Reviewer) together.
+Orchestrator - ties Clarifier → Generator → Reviewer together.
 
 This module implements the callback-driven pipeline that coordinates the
 multi-agent workflow without depending on any specific framework.
 """
 from typing import Callable, Dict, Optional
 from .clarifier import clarifier_turn, build_initial_history
-from .generator import generate_workplan, structural_checks
-from .kb import load_context_spec, load_examples, format_examples_for_prompt
+from .generator import generate_workplan
+from .reviewer import review_workplan, Review
+from .kb import load_context_spec, load_examples, load_models_schema
 from .llm import create_vision_client, create_text_client
 
 
@@ -100,15 +101,24 @@ def run_pipeline(
 
     on_message("generator_raw", raw)
 
-    # Phase 3: Structural validation
-    structural_issues = []
+    # Phase 3: Reviewer validation
+    review = None
+    models_schema = None
     if workplan is not None:
-        structural_issues = structural_checks(workplan)
+        # Load models schema for parameter validation
+        try:
+            models_schema = load_models_schema()
+        except FileNotFoundError:
+            # Schema not available, skip parameter validation
+            pass
+
+        review = review_workplan(workplan, models_schema)
+        on_message("reviewer_result", f"Status: {review.status}, Errors: {len(review.errors)}, Warnings: {len(review.warnings)}")
 
     return {
         "brief": brief,
         "workplan": workplan,
         "error": error,
         "raw": raw,
-        "structural_issues": structural_issues,
+        "review": review,
     }

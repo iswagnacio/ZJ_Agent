@@ -28,7 +28,7 @@ import json
 import sys
 from pathlib import Path
 
-from src.core import run_pipeline
+from src.core import run_pipeline, format_review
 
 
 # ───────────────────────── CLI callbacks ─────────────────────────
@@ -88,28 +88,32 @@ def main():
         on_message=cli_on_message,
     )
 
-    # Check for errors
+    # Check for generation errors
     if result["error"]:
         print(f"\n!! Generator output is not valid JSON: {result['error']}")
         print(f"Raw output:\n{result['raw'][:2000]}")
         sys.exit(1)
 
-    # Structural validation
-    print("\n────────── workplan structural checks ──────────")
-    if result["structural_issues"]:
-        for issue in result["structural_issues"]:
-            print(f"  ✗ {issue}")
-    else:
-        print("  ✓ all invariants hold (jobType set, pic_split/formula ordering, references)")
+    # Review validation
+    print("\n────────── workplan review ──────────")
+    if result["review"]:
+        print(format_review(result["review"]))
 
-    # Save workplan
+        if result["review"].status == "reject":
+            print("\n!! Workplan has errors and cannot be saved")
+            sys.exit(1)
+    else:
+        print("⚠ Review skipped (workplan generation failed)")
+        sys.exit(1)
+
+    # Save workplan (only if review passed)
     dest = Path(args.out)
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_text(
         json.dumps(result["workplan"], ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
-    print(f"\nsaved Workplan → {dest}")
+    print(f"\n✓ Saved validated workplan → {dest}")
 
 
 if __name__ == "__main__":

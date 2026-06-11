@@ -13,6 +13,7 @@ from .kb import load_context_spec, load_examples, load_models_schema, format_exa
 from .llm import create_vision_client, create_text_client
 from .clarifier import clarifier_turn, ClarifierTurn, build_initial_history
 from .generator import generate_workplan, structural_checks
+from .reviewer import review_workplan, Review, Issue, format_review
 from .orchestrator import run_pipeline
 
 __all__ = [
@@ -27,5 +28,9 @@ __all__ = [
     "build_initial_history",
     "generate_workplan",
     "structural_checks",
+    "review_workplan",
+    "Review",
+    "Issue",
+    "format_review",
     "run_pipeline",
 ]
