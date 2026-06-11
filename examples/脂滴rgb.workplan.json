@@ -1,0 +1,214 @@
+{
+  "experimentName": "细胞脂滴面积分析",
+  "inputMode": "single_rgb_merged_image",
+  "analysisGoal": "统计图像总细胞数、总脂滴面积及单位细胞对应的脂滴面积",
+  "imageInference": {
+    "imageModality": "fluorescence",
+    "experimentType": "cellular_analysis,area_analysis",
+    "reasoning": [
+      "图像为荧光RGB合并图，蓝色通道对应DAPI标记细胞核，绿色通道对应脂滴染色信号，红色通道无有效标记为背景通道",
+      "细胞核使用Cellpose实例分割方法识别，统计得到总细胞数量",
+      "脂滴区域在绿色通道使用阈值分割提取，计算得到总脂滴面积，最终计算单位细胞对应的脂滴面积"
+    ]
+  },
+  "workplanSceneType": "target_based_analysis",
+  "channels": [
+    {
+      "channelId": "ch0",
+      "channelName": "unused_red_channel",
+      "semanticRole": "background_channel"
+    },
+    {
+      "channelId": "ch1",
+      "channelName": "lipid_droplet",
+      "semanticRole": "lipid_marker_channel"
+    },
+    {
+      "channelId": "ch2",
+      "channelName": "DAPI",
+      "semanticRole": "nucleus_marker_channel"
+    }
+  ],
+  "targets": [
+    {
+      "targetName": "total_nucleus",
+      "targetType": "nucleus",
+      "description": "DAPI通道经Cellpose分割得到的所有细胞核ROI集合，用于统计总细胞数"
+    },
+    {
+      "targetName": "total_lipid_droplet",
+      "targetType": "lipid_region",
+      "description": "绿色通道经阈值分割得到的所有脂滴阳性区域ROI集合，用于统计总脂滴面积"
+    }
+  ],
+  "jobs": [
+    {
+      "jobId": "job_00",
+      "jobName": "荧光RGB通道拆分",
+      "jobType": "pic_split",
+      "stepDescript": "将输入的荧光RGB合并图拆分为未使用红色通道、脂滴绿色通道、DAPI蓝色通道",
+      "inputs": {
+        "imageModality": "fluorescence",
+        "sourceImageType": "single_rgb_merged_image"
+      },
+      "outputs": {
+        "generatedChannels": [
+          "ch0",
+          "ch1",
+          "ch2"
+        ]
+      },
+      "picSplitPlan": {
+        "splitMethod": "rgb_split",
+        "channelMapping": {
+          "ch0": "unused_red_channel",
+          "ch1": "lipid_droplet",
+          "ch2": "DAPI"
+        },
+        "recommended": true,
+        "outputOptions": {
+          "returnChannelStoredFiles": true,
+          "returnChannelBase64": false
+        }
+      }
+    },
+    {
+      "jobId": "job_01",
+      "jobName": "建立总细胞核target",
+      "jobType": "create_target",
+      "stepDescript": "在DAPI蓝色通道上使用Cellpose分割所有细胞核，建立总细胞核target",
+      "inputs": {
+        "channelId": [
+          "ch2"
+        ],
+        "sourceTargetNames": []
+      },
+      "outputs": {
+        "targetName": "total_nucleus"
+      },
+      "createTargetPlan": {
+        "recommendedSegmentMethod": "cellpose",
+        "segmentMethodReason": "Cellpose对荧光DAPI通道的细胞核实例分割准确率高，可有效识别单个细胞核用于计数",
+        "sourceTargetNames": [],
+        "variant": [],
+        "variantReasoning": "",
+        "measureOn": [],
+        "measureFeatures": [],
+        "filterConditions": [],
+        "filterBasis": "",
+        "cellposeParams": {
+          "model": "zhijing_if_nuclei",
+          "diameter": 20.0,
+          "flowThreshold": {
+            "min": 0.0,
+            "max": 1.0
+          },
+          "cellprobThreshold": {
+            "min": -6.0,
+            "max": 6.0
+          }
+        },
+        "imagePreprocess": {
+          "smooth": 0,
+          "blur": 0,
+          "sharp": 0,
+          "invert": false
+        }
+      }
+    },
+    {
+      "jobId": "job_02",
+      "jobName": "建立总脂滴target",
+      "jobType": "create_target",
+      "stepDescript": "在脂滴绿色通道上使用阈值分割所有脂滴阳性区域，建立总脂滴target",
+      "inputs": {
+        "channelId": [
+          "ch1"
+        ],
+        "sourceTargetNames": []
+      },
+      "outputs": {
+        "targetName": "total_lipid_droplet"
+      },
+      "createTargetPlan": {
+        "recommendedSegmentMethod": "threshold",
+        "segmentMethodReason": "脂滴在绿色通道表现为高亮度信号，使用阈值分割可有效提取脂滴阳性区域用于面积统计",
+        "sourceTargetNames": [],
+        "variant": [],
+        "variantReasoning": "",
+        "measureOn": [],
+        "measureFeatures": [],
+        "filterConditions": [],
+        "filterBasis": "",
+        "thresholdParams": {
+          "thresholdMin": 50,
+          "thresholdMax": 255
+        },
+        "imagePreprocess": {
+          "smooth": 2,
+          "blur": 0,
+          "sharp": 0,
+          "invert": false
+        },
+        "binaryPostprocess": {
+          "fillHole": true,
+          "watershed": true
+        },
+        "analyzeParticlesParams": {
+          "sizeMin": 10.0,
+          "sizeMax": 1000000.0,
+          "circularityMin": 0.0,
+          "circularityMax": 1.0,
+          "excludeOnEdges": false,
+          "includeHoles": true
+        }
+      }
+    },
+    {
+      "jobId": "job_99",
+      "jobName": "计算脂滴分析指标",
+      "jobType": "formula",
+      "stepDescript": "基于总细胞核计数和总脂滴面积，计算单位细胞对应的脂滴面积并输出所有统计指标",
+      "inputs": {
+        "targetInputs": [
+          {
+            "targetName": "total_nucleus",
+            "metric": "COUNT",
+            "role": "total_cell_count"
+          },
+          {
+            "targetName": "total_lipid_droplet",
+            "metric": "AREA_SUM",
+            "role": "total_lipid_area"
+          }
+        ]
+      },
+      "outputs": {
+        "resultName": "lipid_analysis_result"
+      },
+      "formulaPlan": {
+        "expression": "totalCellCount = total_nucleus.COUNT; totalLipidArea = total_lipid_droplet.AREA_SUM; lipidAreaPerCell = totalLipidArea / totalCellCount",
+        "reportFields": [
+          {
+            "fieldName": "totalCellCount",
+            "displayName": "总细胞数",
+            "unit": "个",
+            "description": "图像中DAPI标记的总细胞核数量"
+          },
+          {
+            "fieldName": "totalLipidArea",
+            "displayName": "总脂滴面积",
+            "unit": "px²",
+            "description": "图像中所有脂滴阳性区域的总面积"
+          },
+          {
+            "fieldName": "lipidAreaPerCell",
+            "displayName": "单位细胞脂滴面积",
+            "unit": "px²/个",
+            "description": "总脂滴面积除以总细胞数得到的单细胞平均脂滴面积"
+          }
+        ]
+      }
+    }
+  ]
+}
