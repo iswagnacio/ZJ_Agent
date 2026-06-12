@@ -92,13 +92,18 @@ class ReviewerAgent:
     structural-only validation rather than crashing — the hard gate still works.
     """
 
-    def __init__(self, provider: Optional[Any] = None, kb_dir: str = "kb_compiled"):
-        self.provider = provider if provider is not None else _try_load_provider(kb_dir)
-        # KB-supported vocabulary (for soft cross-checks). Empty sets ⇒ checks skipped.
-        self.kb_segment_methods, self.kb_split_methods, self.kb_matrices = _load_kb_vocab(self.provider)
-        logger.info(
+    def __init__(self, models_schema: Optional[dict] = None, *, kb_dir: Optional[str] = None):
+        # Vocabulary source = the compiled models_jsonschema.json (the same artifact the
+        # executor validates against). Passed in by the orchestrator, or self-loaded from
+        # the KB via core.kb. We deliberately do NOT silently run "KB-less": kb_loaded is
+        # surfaced in every result so a misconfigured path can't quietly disable half the gate.
+        if models_schema is None:
+            models_schema = _load_models_schema_safe(kb_dir)
+        self.kb_loaded = models_schema is not None
+        self.kb_segment_methods, self.kb_split_methods, self.kb_matrices = _vocab_from_models(models_schema)
+        (logger.info if self.kb_loaded else logger.warning)(
             "Reviewer ready (KB %s). seg=%s split=%s",
-            "loaded" if self.provider else "absent",
+            "loaded" if self.kb_loaded else "ABSENT → vocabulary cross-checks disabled",
             sorted(self.kb_segment_methods) or "—",
             sorted(self.kb_split_methods) or "—",
         )
@@ -118,6 +123,7 @@ class ReviewerAgent:
         logger.info("Review: %s (%d errors, %d warnings)", status, len(errors), len(warnings))
         return {
             "status": status,
+            "kb_loaded": self.kb_loaded,
             "errors": [i.as_dict() for i in errors],
             "critical_issues": [i.as_dict() for i in errors],   # back-compat with reviewer_node
             "warnings": [i.as_dict() for i in warnings],
@@ -385,28 +391,46 @@ def _summary(status, errors, warnings) -> str:
     return f"REJECT — {len(errors)} structural error(s); {len(warnings)} warning(s)."
 
 
-def _try_load_provider(kb_dir: str):
+def _load_models_schema_safe(kb_dir: Optional[str]) -> Optional[dict]:
+    """Load the compiled models_jsonschema.json via core.kb, CWD-independently.
+
+    Resolves to <repo_root>/kb_compiled/models_jsonschema.json by default so the reviewer
+    finds the KB no matter where the process is launched from (the previous version imported
+    the now-removed knowledge.provider and used a CWD-relative path, which is exactly why the
+    cross-check silently SKIPPED). Returns None — and the caller surfaces kb_loaded=False —
+    only if the artifact genuinely isn't on disk.
+    """
+    from pathlib import Path
     try:
-        from ..knowledge.provider import load_provider
-        return load_provider(kb_dir, mode="full")
-    except Exception as e:  # KB absent / not built — structural-only mode
-        logger.info("Reviewer running without KB (%s); vocabulary checks skipped.", e)
-        return None
+        from .kb import load_models_schema      # the new KB loader (provider.py was removed)
+    except Exception:
+        load_models_schema = None
+    candidates = []
+    if kb_dir:
+        candidates.append(Path(kb_dir) / "models_jsonschema.json")
+    candidates.append(Path(__file__).resolve().parents[2] / "kb_compiled" / "models_jsonschema.json")
+    candidates.append(Path("kb_compiled/models_jsonschema.json"))
+    for p in candidates:
+        try:
+            if load_models_schema is not None:
+                return load_models_schema(p)
+            import json
+            return json.loads(Path(p).read_text(encoding="utf-8"))
+        except Exception:
+            continue
+    logger.warning("Reviewer: models_jsonschema.json not found (tried %s); "
+                   "vocabulary cross-checks disabled.", [str(c) for c in candidates])
+    return None
 
 
-def _load_kb_vocab(provider) -> Tuple[set, set, set]:
-    """Discover supported segment methods, split methods, and deconv matrices from the KB."""
+def _vocab_from_models(models: Optional[dict]) -> Tuple[set, set, set]:
+    """Discover supported segment methods, split methods, and deconv matrices from the
+    compiled models dict (models_jsonschema.json) — no provider object required."""
     seg, split, matrices = set(), set(), set()
-    if provider is None:
+    if not models:
         return seg, split, matrices
     try:
-        schema = provider.get_param_schema("Segment_ROI_API_v10")  # base group; groups discovered below
-    except Exception:
-        schema = None
-    try:
-        models = getattr(provider, "_models", {})
         seg = {k.split(":")[0] for k in models.get("Segment_ROI_API_v10", {}).get("groups", {}) if ":" in k}
-        # walk Pic_Split schema for splitMethod + matrix enums
         ps = models.get("Pic_Split_API_v10", {})
         for path, enum in _walk_enums(ps):
             low = path.lower()
@@ -455,7 +479,7 @@ def review_workplan(workplan: dict, models_schema: Optional[dict] = None) -> Rev
     Returns:
         Review dataclass with status, errors, warnings
     """
-    reviewer = ReviewerAgent()
+    reviewer = ReviewerAgent(models_schema=models_schema)
     issues = reviewer.review(workplan)
     errors = [i for i in issues if i.severity == "error"]
     warnings = [i for i in issues if i.severity == "warning"]

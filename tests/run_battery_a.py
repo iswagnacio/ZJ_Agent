@@ -23,7 +23,7 @@ from openai import OpenAI
 BASE_URL = os.environ.get("ARK_BASE_URL", "https://ark.cn-beijing.volces.com/api/v3")
 API_KEY = os.environ.get("ARK_API_KEY")
 MODEL = os.environ.get("ARK_VISION_MODEL")
-PROMPT_PATH = Path("/Users/junwei/Personal/CZ/agent/workplan-generator/prompts/clarifier_system_prompt.md")
+PROMPT_PATH = Path("prompts/clarifier_system_prompt.md")
 KB_PATH = Path("kb_compiled/context_spec.md")
 READY_MARKER = "[[TASK_READY]]"
 
