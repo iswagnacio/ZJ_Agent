@@ -1,84 +1,81 @@
 {
-  "experimentName": "Ki67免疫荧光阳性率分析",
+  "experimentName": "胰岛Ki67增殖比例分析",
   "inputMode": "single_rgb_merged_image",
-  "analysisGoal": "统计荧光图像中Ki67阳性细胞占总细胞的比例，即Ki67阳性率。",
+  "analysisGoal": "统计胰岛内Ki67阳性细胞核的比例",
   "imageInference": {
     "imageModality": "fluorescence",
-    "experimentType": "cellular_analysis,positive_rate_analysis,fluorescence_analysis",
+    "experimentType": "cellular",
     "reasoning": [
-      "图像为荧光RGB合并图，蓝色通道为DAPI标记的细胞核，红色通道为Ki67阳性信号，因此采用rgb_split方法拆分通道。",
-      "使用Cellpose模型在DAPI通道分割所有细胞核，作为总细胞统计的基础target。",
-      "基于总细胞核target，测量每个细胞核对应Ki67红色通道的平均强度，筛选出Ki67阳性细胞亚群。",
-      "最终通过阳性细胞数除以总细胞数计算得到Ki67阳性率。"
+      "根据图像荧光颜色分布与用户描述，判断为荧光细胞实验。"
     ]
   },
   "workplanSceneType": "target_based_analysis",
   "channels": [
     {
       "channelId": "ch0",
-      "channelName": "Ki67阳性信号",
-      "semanticRole": "positive_signal_channel"
+      "channelName": "Ki67",
+      "semanticRole": "proliferation_marker"
     },
     {
       "channelId": "ch1",
-      "channelName": "unused_green_channel",
-      "semanticRole": "unused_or_background_channel"
+      "channelName": "islet_marker",
+      "semanticRole": "region_marker"
     },
     {
       "channelId": "ch2",
-      "channelName": "DAPI细胞核",
+      "channelName": "DAPI",
       "semanticRole": "nucleus_marker"
     }
   ],
   "targets": [
     {
-      "targetName": "total_nuclei",
+      "targetName": "total_dapi_roi",
       "targetType": "nucleus",
-      "description": "DAPI通道通过Cellpose分割得到的所有细胞核ROI集合，代表总细胞数量。"
+      "description": "全视野内所有DAPI标记的细胞核ROI。"
     },
     {
-      "targetName": "ki67_positive_nuclei",
-      "targetType": "positive_cell_subpopulation",
-      "description": "总细胞核中Ki67红色通道平均强度高于阈值的阳性细胞ROI集合。"
+      "targetName": "total_dapi_in_islet_roi",
+      "targetType": "nucleus",
+      "description": "胰岛区域内的DAPI标记细胞核ROI，由全视野细胞核筛选得到。"
+    },
+    {
+      "targetName": "ki67_positive_dapi_in_islet_roi",
+      "targetType": "positive_nucleus",
+      "description": "胰岛区域内Ki67阳性的DAPI标记细胞核ROI，由胰岛内细胞核筛选得到。"
     }
   ],
   "jobs": [
     {
       "jobId": "job_00",
-      "jobName": "RGB荧光通道拆分",
+      "jobName": "通道拆分",
       "jobType": "pic_split",
-      "stepDescript": "将输入的荧光RGB合并图拆分为Ki67红色通道、未使用绿色通道和DAPI蓝色通道。",
+      "stepDescript": "拆分RGB荧光图为Ki67、胰岛标记、DAPI三个独立通道",
       "inputs": {
         "imageModality": "fluorescence",
         "sourceImageType": "single_rgb_merged_image"
       },
       "outputs": {
         "generatedChannels": [
-          "ch0",
-          "ch1",
-          "ch2"
+          "Ki67",
+          "islet_marker",
+          "DAPI"
         ]
       },
       "picSplitPlan": {
         "splitMethod": "rgb_split",
         "channelMapping": {
-          "ch0": "Ki67阳性信号",
-          "ch1": "unused_green_channel",
-          "ch2": "DAPI细胞核"
+          "ch0": "Ki67",
+          "ch1": "islet_marker",
+          "ch2": "DAPI"
         },
-        "recommended": true,
-        "outputOptions": {
-          "returnChannelStoredFiles": true,
-          "returnChannelBase64": false,
-          "returnChannelPseudoBase64": true
-        }
+        "recommended": true
       }
     },
     {
       "jobId": "job_01",
-      "jobName": "建立总细胞核target",
+      "jobName": "分割全视野细胞核",
       "jobType": "create_target",
-      "stepDescript": "在DAPI通道上使用Cellpose识别图片中的所有细胞核，建立total_nuclei作为总细胞ROI集合。",
+      "stepDescript": "在DAPI通道上使用Cellpose分割全视野内的所有细胞核，建立基础目标集合",
       "inputs": {
         "channelId": [
           "ch2"
@@ -86,21 +83,14 @@
         "sourceTargetNames": []
       },
       "outputs": {
-        "targetName": "total_nuclei"
+        "targetName": "total_dapi_roi"
       },
       "createTargetPlan": {
         "recommendedSegmentMethod": "cellpose",
-        "segmentMethodReason": "Cellpose模型适用于DAPI荧光图像的细胞核实例分割，可准确识别每个独立细胞核作为总细胞统计基础。",
-        "sourceTargetNames": [],
-        "variant": [],
-        "variantReasoning": "total_nuclei为直接由DAPI通道分割得到的基础细胞核target，不需要生成空间变体。",
-        "measureOn": [],
-        "measureFeatures": [],
-        "filterConditions": [],
-        "filterBasis": "",
+        "segmentMethodReason": "Cellpose对细胞核分割具有较高准确性，适合荧光图像中的细胞核检测",
         "cellposeParams": {
           "model": "zhijing_if_nuclei",
-          "diameter": 30.0,
+          "diameter": 23,
           "flowThreshold": {
             "min": 0.0,
             "max": 1.0
@@ -110,38 +100,77 @@
             "max": 6.0
           }
         },
-        "imagePreprocess": {
-          "smooth": 0,
-          "blur": 0,
-          "sharp": 0,
-          "invert": false
-        }
+        "measureFeatures": [],
+        "filterBasis": ""
       }
     },
     {
       "jobId": "job_02",
-      "jobName": "建立Ki67阳性细胞target",
+      "jobName": "筛选胰岛内细胞核",
       "jobType": "create_target",
-      "stepDescript": "基于total_nuclei总细胞核target，测量每个细胞核在Ki67红色通道的平均强度，筛选出阳性细胞并绑定为ki67_positive_nuclei target。",
+      "stepDescript": "基于全视野细胞核集合，筛选出胰岛区域内的细胞核",
+      "inputs": {
+        "channelId": [
+          "ch1"
+        ],
+        "sourceTargetNames": [
+          "total_dapi_roi"
+        ],
+        "variant": [
+          {
+            "boundaryModes": "on_bound",
+            "offsetLevels": "0.2"
+          }
+        ]
+      },
+      "outputs": {
+        "targetName": "total_dapi_in_islet_roi"
+      },
+      "createTargetPlan": {
+        "recommendedSegmentMethod": "",
+        "segmentMethodReason": "",
+        "measureOn": [
+          "ch1"
+        ],
+        "measureFeatures": [
+          "MEAN"
+        ],
+        "filterConditions": [
+          {
+            "channelId": "ch1",
+            "feature": "MEAN",
+            "operator": ">",
+            "threshold": "23"
+          }
+        ],
+        "filterBasis": "筛选胰岛标记通道信号强度高于阈值的细胞核"
+      }
+    },
+    {
+      "jobId": "job_03",
+      "jobName": "筛选Ki67阳性细胞核",
+      "jobType": "create_target",
+      "stepDescript": "基于胰岛内细胞核集合，筛选出Ki67阳性的细胞核",
       "inputs": {
         "channelId": [
           "ch0"
         ],
         "sourceTargetNames": [
-          "total_nuclei"
+          "total_dapi_in_islet_roi"
+        ],
+        "variant": [
+          {
+            "boundaryModes": "in_bound",
+            "offsetLevels": "0.1"
+          }
         ]
       },
       "outputs": {
-        "targetName": "ki67_positive_nuclei"
+        "targetName": "ki67_positive_dapi_in_islet_roi"
       },
       "createTargetPlan": {
         "recommendedSegmentMethod": "",
         "segmentMethodReason": "",
-        "sourceTargetNames": [
-          "total_nuclei"
-        ],
-        "variant": [],
-        "variantReasoning": "Ki67阳性细胞由总细胞核筛选得到，不需要生成空间变体。",
         "measureOn": [
           "ch0"
         ],
@@ -153,56 +182,40 @@
             "channelId": "ch0",
             "feature": "MEAN",
             "operator": ">",
-            "threshold": 50,
-            "reason": "Ki67红色通道平均强度高于阈值50判定为阳性细胞，符合荧光阳性信号的常规判定阈值。"
+            "threshold": "75"
           }
         ],
-        "filterBasis": "测量每个细胞核在Ki67红色通道的平均强度，保留强度高于阈值的细胞作为阳性亚群。"
+        "filterBasis": "筛选Ki67通道信号强度高于阈值的细胞核"
       }
     },
     {
       "jobId": "job_99",
-      "jobName": "计算Ki67阳性率",
+      "jobName": "计算增殖比例",
       "jobType": "formula",
-      "stepDescript": "基于总细胞数和Ki67阳性细胞数计算Ki67阳性率，并输出相关统计指标。",
+      "stepDescript": "计算胰岛内Ki67阳性细胞核的比例",
       "inputs": {
         "targetInputs": [
           {
-            "targetName": "total_nuclei",
+            "targetName": "ki67_positive_dapi_in_islet_roi",
             "metric": "COUNT",
-            "role": "total_cell_count"
+            "role": "numerator"
           },
           {
-            "targetName": "ki67_positive_nuclei",
+            "targetName": "total_dapi_in_islet_roi",
             "metric": "COUNT",
-            "role": "positive_cell_count"
+            "role": "denominator"
           }
         ]
       },
       "outputs": {
-        "resultName": "ki67_positive_rate_result"
+        "resultName": "ki67_positive_ratio_in_islet"
       },
       "formulaPlan": {
-        "expression": "totalCellCount = total_nuclei.COUNT; positiveCellCount = ki67_positive_nuclei.COUNT; ki67PositiveRate = positiveCellCount / totalCellCount * 100",
+        "expression": "ki67_positive_dapi_in_islet_roi / total_dapi_in_islet_roi",
         "reportFields": [
-          {
-            "fieldName": "totalCellCount",
-            "displayName": "总细胞数",
-            "unit": "个",
-            "description": "DAPI通道识别得到的所有细胞核数量，代表统计范围内的总细胞数。"
-          },
-          {
-            "fieldName": "positiveCellCount",
-            "displayName": "Ki67阳性细胞数",
-            "unit": "个",
-            "description": "Ki67红色通道平均强度高于阈值的阳性细胞数量。"
-          },
-          {
-            "fieldName": "ki67PositiveRate",
-            "displayName": "Ki67阳性率",
-            "unit": "%",
-            "description": "Ki67阳性细胞数占总细胞数的百分比，公式为阳性细胞数/总细胞数×100。"
-          }
+          "total_dapi_in_islet_count",
+          "ki67_positive_dapi_count",
+          "ki67_positive_ratio_in_islet"
         ]
       }
     }

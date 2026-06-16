@@ -1,76 +1,94 @@
 {
-  "experimentName": "天狼星红染色胶原纤维面积分析",
+  "experimentName": "siriusred",
   "inputMode": "single_rgb_brightfield_image",
-  "analysisGoal": "统计明场天狼星红染色组织切片中胶原纤维的总面积",
+  "analysisGoal": "统计图片中Sirius Red染色标记的胶原纤维面积。",
   "imageInference": {
     "imageModality": "brightfield",
-    "experimentType": "tissue_region_analysis,area_analysis",
+    "experimentType": "tissue_region_analysis,area_analysis,color_deconvolution_analysis",
     "reasoning": [
-      "图像为明场天狼星红染色组织切片，紫红色信号为目标胶原纤维区域，蓝色为苏木精染色的细胞核",
-      "采用颜色反卷积拆分染色通道，通过阈值分割提取所有胶原纤维阳性区域",
-      "测量胶原纤维区域的总面积作为最终分析结果"
+      "SAS配置显示染色方案为天狼星红染色，红色成分对应胶原纤维，黄色成分对应苦味酸背景下的细胞质或肌纤维，因此按明场染色图进行颜色反卷积。",
+      "当前预设矩阵列表中没有明确的Sirius Red预设，本Workplan使用custom颜色反卷积方案，按胶原红和肌纤维黄色两组RGB染色向量拆分通道。",
+      "胶原纤维target在胶原纤维解卷通道上使用低灰度阈值0到107分割，按截图配置保留面积大于20 px^2的组织区域。"
     ]
   },
   "workplanSceneType": "target_based_analysis",
   "channels": [
     {
       "channelId": "ch0",
-      "channelName": "天狼星红（胶原纤维）",
-      "semanticRole": "collagen_signal_channel"
+      "channelName": "胶原纤维",
+      "semanticRole": "collagen_fiber_channel"
     },
     {
       "channelId": "ch1",
-      "channelName": "苏木精（细胞核）",
-      "semanticRole": "nucleus_channel"
+      "channelName": "肌纤维",
+      "semanticRole": "counterstain_or_muscle_fiber_channel"
     },
     {
       "channelId": "ch2",
       "channelName": "背景残留",
-      "semanticRole": "background_channel"
+      "semanticRole": "residual_background_channel"
     }
   ],
   "targets": [
     {
-      "targetName": "total_collagen_roi",
-      "targetType": "collagen_region",
-      "description": "通过阈值分割提取的所有紫红色胶原纤维区域ROI集合"
+      "targetName": "胶原纤维",
+      "targetType": "collagen_fiber_region",
+      "description": "图片中由Sirius Red胶原纤维通道阈值分割得到的胶原纤维ROI集合。"
     }
   ],
   "jobs": [
     {
       "jobId": "job_00",
-      "jobName": "颜色反卷积拆分通道",
+      "jobName": "Sirius Red颜色反卷积",
       "jobType": "pic_split",
-      "stepDescript": "对输入的明场天狼星红染色图像执行颜色反卷积，拆分出天狼星红（胶原纤维）、苏木精（细胞核）和背景残留三个通道",
+      "stepDescript": "对输入的Sirius Red明场染色图执行custom颜色反卷积，拆分胶原纤维、肌纤维和背景残留通道。",
       "inputs": {
         "imageModality": "brightfield",
         "sourceImageType": "single_rgb_brightfield_image"
       },
       "outputs": {
         "generatedChannels": [
-          "天狼星红（胶原纤维）",
-          "苏木精（细胞核）",
-          "背景残留"
+          "ch0",
+          "ch1",
+          "ch2"
         ]
       },
       "picSplitPlan": {
         "splitMethod": "color_deconvolution",
         "colorDeconvParams": {
-          "matrix": "Masson Trichrome"
+          "matrix": "custom",
+          "vectorValueType": "rgb",
+          "stainVectors": [
+            {
+              "r": 180,
+              "g": 30,
+              "b": 35
+            },
+            {
+              "r": 230,
+              "g": 210,
+              "b": 30
+            }
+          ]
         },
         "channelMapping": {
-          "ch0": "天狼星红（胶原纤维）",
-          "ch1": "苏木精（细胞核）",
+          "ch0": "胶原纤维",
+          "ch1": "肌纤维",
           "ch2": "背景残留"
         },
-        "recommended": true
+        "recommended": true,
+        "outputOptions": {
+          "returnChannelStoredFiles": true,
+          "returnChannelBase64": false,
+          "returnChannelPseudoBase64": true
+        }
       }
     },
     {
       "jobId": "job_01",
-      "jobName": "分割提取胶原纤维区域",
+      "jobName": "建立胶原纤维target",
       "jobType": "create_target",
-      "stepDescript": "在天狼星红（胶原纤维）通道上使用阈值分割提取所有阳性胶原纤维区域，建立胶原纤维目标集合",
+      "stepDescript": "在胶原纤维解卷通道上使用阈值0到107分割胶原纤维阳性区域，建立胶原纤维target。",
       "inputs": {
         "channelId": [
           "ch0"
@@ -78,34 +96,34 @@
         "sourceTargetNames": []
       },
       "outputs": {
-        "targetName": "total_collagen_roi"
+        "targetName": "胶原纤维"
       },
       "createTargetPlan": {
         "recommendedSegmentMethod": "threshold",
-        "segmentMethodReason": "胶原纤维在天狼星红通道中表现为低灰度阳性染色区域，适合使用阈值分割提取完整区域",
+        "segmentMethodReason": "Sirius Red胶原纤维在自定义颜色反卷积后的胶原通道中作为目标染色信号进行分割；截图配置使用0到107的低灰度阈值范围提取胶原纤维区域。",
         "sourceTargetNames": [],
         "variant": [],
-        "variantReasoning": "",
+        "variantReasoning": "胶原纤维target由胶原纤维通道直接阈值分割得到，不基于已有target生成空间变体。",
         "measureOn": [],
         "measureFeatures": [],
         "filterConditions": [],
         "filterBasis": "",
         "thresholdParams": {
           "thresholdMin": 0,
-          "thresholdMax": 180
+          "thresholdMax": 107
         },
         "imagePreprocess": {
-          "smooth": 2,
+          "smooth": 0,
           "blur": 0,
           "sharp": 0,
           "invert": false
         },
         "binaryPostprocess": {
-          "fillHole": true,
-          "watershed": false
+          "fillHole": false,
+          "watershed": true
         },
         "analyzeParticlesParams": {
-          "sizeMin": 1,
+          "sizeMin": 20.0,
           "sizeMax": 10000000,
           "circularityMin": 0.0,
           "circularityMax": 1.0,
@@ -116,29 +134,29 @@
     },
     {
       "jobId": "job_99",
-      "jobName": "计算胶原纤维总面积",
+      "jobName": "计算胶原纤维面积",
       "jobType": "formula",
-      "stepDescript": "测量提取的胶原纤维区域总面积并输出结果",
+      "stepDescript": "统计胶原纤维target的面积总和，输出胶原纤维面积指标。",
       "inputs": {
         "targetInputs": [
           {
-            "targetName": "total_collagen_roi",
+            "targetName": "胶原纤维",
             "metric": "AREA_SUM",
-            "role": "total_collagen_area"
+            "role": "collagen_fiber_area"
           }
         ]
       },
       "outputs": {
-        "resultName": "collagen_area_result"
+        "resultName": "collagen_fiber_area_summary"
       },
       "formulaPlan": {
-        "expression": "collagenTotalArea = total_collagen_roi.AREA_SUM",
+        "expression": "collagenFiberArea = 胶原纤维.AREA_SUM",
         "reportFields": [
           {
-            "fieldName": "collagenTotalArea",
-            "displayName": "胶原纤维总面积",
+            "fieldName": "collagenFiberArea",
+            "displayName": "胶原纤维面积",
             "unit": "px^2",
-            "description": "图片中所有天狼星红染色阳性的胶原纤维区域面积总和"
+            "description": "胶原纤维target的面积总和。"
           }
         ]
       }

@@ -72,7 +72,18 @@ def load_examples(examples_dir: Path = None) -> Dict[str, str]:
     for name, filename in EXAMPLE_FILES.items():
         path = examples_dir / filename
         if not path.exists():
-            raise FileNotFoundError(f"Example workplan not found: {path}")
+            # Tolerate filename drift between "<name>_workplan.json" and
+            # "<name>.workplan.json" (the gold set has both conventions). Resolve by
+            # base name so a naming mismatch can't silently break the whole pipeline.
+            stem = filename.replace("_workplan.json", "").replace(".workplan.json", "")
+            candidates = sorted(examples_dir.glob(f"{stem}*.json"))
+            if candidates:
+                path = candidates[0]
+            else:
+                raise FileNotFoundError(
+                    f"Example workplan not found for '{name}': tried '{filename}' "
+                    f"and '{stem}*.json' in {examples_dir}"
+                )
         examples[name] = path.read_text(encoding="utf-8")
 
     return examples

@@ -72,3 +72,10 @@ docker-compose.override.yml
 # Application specific
 uploads/
 uploaded_images/
+out/
+out_e2e/
+
+# MinIO
+minio-data/
+cloudflared.log
+test_output.log

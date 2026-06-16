@@ -55,6 +55,8 @@ def generate_workplan(
     client: OpenAI,
     model: str,
     temperature: float = 0,
+    feedback: Optional[str] = None,
+    prior_attempt: Optional[str] = None,
 ) -> Tuple[Optional[dict], Optional[str], str]:
     """
     Generate a workplan JSON from the Clarifier's task brief.
@@ -93,6 +95,12 @@ def generate_workplan(
         {"role": "system", "content": full_system_prompt},
         {"role": "user", "content": "生成本次分析的 Workplan JSON。"},
     ]
+    # On a corrective retry, show the model its rejected attempt and the validation
+    # errors so it can fix them rather than regenerate blindly.
+    if prior_attempt:
+        messages.append({"role": "assistant", "content": prior_attempt})
+    if feedback:
+        messages.append({"role": "user", "content": feedback})
 
     # Try JSON mode first
     try:
@@ -156,8 +164,9 @@ def structural_checks(workplan: dict) -> list[str]:
         if jobs[-1].get("jobType") != "formula":
             issues.append("last job is not formula")
 
-    # Valid jobType and reference resolution
-    valid_job_types = {"pic_split", "create_target", "formula", "roi_render", "quality_control"}
+    # Valid jobType and reference resolution.
+    # Keep in lockstep with workplan_schema.Job.jobType and the Reviewer CONTRACT.
+    valid_job_types = {"pic_split", "create_target", "formula"}
     created_targets = []
 
     for job in jobs:

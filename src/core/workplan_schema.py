@@ -53,7 +53,11 @@ class Job(BaseModel):
     """Base job structure - validation of job-specific plans done separately."""
     jobId: str
     jobName: str
-    jobType: Literal["pic_split", "create_target", "formula", "roi_render", "quality_control"]
+    jobType: Literal["pic_split", "create_target", "formula"]
+    # NOTE: jobType is intentionally limited to these three. A new type enters the
+    # vocabulary only when all four pieces land together: a backend endpoint, a worked
+    # example, a Generator prompt rule, and a Reviewer vocab entry. Reserved for future
+    # (not yet implemented): "roi_render", "quality_control".
     stepDescript: str
     inputs: Optional[JobInputs] = None
     outputs: Optional[JobOutputs] = None
@@ -62,8 +66,7 @@ class Job(BaseModel):
     picSplitPlan: Optional[Dict[str, Any]] = None
     createTargetPlan: Optional[Dict[str, Any]] = None
     formulaPlan: Optional[Dict[str, Any]] = None
-    roiRenderPlan: Optional[Dict[str, Any]] = None
-    qualityControlPlan: Optional[Dict[str, Any]] = None
+    # Reserved for future jobTypes (not yet implemented): roiRenderPlan, qualityControlPlan
 
 
 class Workplan(BaseModel):
