@@ -28,6 +28,14 @@ import json
 import sys
 from pathlib import Path
 
+# Load .env so ARK_API_KEY / CLARIFIER_MODEL / GENERATOR_MODEL (and optional S3_* /
+# WORKPLAN_DIR) are picked up automatically, matching the test harness behaviour.
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 from src.core import run_pipeline, format_review
 
 

@@ -79,16 +79,31 @@ class S3Client:
         self._ensure_bucket()
 
     def _ensure_bucket(self):
-        """Create bucket if it doesn't exist."""
+        """Create the bucket if it doesn't exist.
+
+        Never raises. A dead/unreachable endpoint (e.g. an expired tunnel or wrong
+        S3_ENDPOINT) previously surfaced as EndpointConnectionError — which is NOT a
+        ClientError, so it escaped the handler and crashed construction (and therefore
+        pipeline/server startup). We now degrade any non-ClientError to a warning so the
+        caller can fall back (e.g. to inline base64) instead of taking down the whole run.
+        """
         try:
             self.s3.head_bucket(Bucket=self.bucket)
             logger.info(f"Bucket '{self.bucket}' exists")
         except ClientError:
+            # head_bucket returned an S3 error — usually the bucket simply doesn't exist.
             try:
                 self.s3.create_bucket(Bucket=self.bucket)
                 logger.info(f"Created bucket '{self.bucket}'")
             except Exception as e:
-                logger.error(f"Failed to create bucket: {e}")
+                logger.warning(f"Could not create bucket '{self.bucket}': {e}")
+        except Exception as e:
+            # Connection/endpoint errors (unreachable host, dead tunnel, DNS failure, …)
+            # are not ClientError. Do not crash — warn and let delivery fall back.
+            logger.warning(
+                f"Object store unreachable while verifying bucket '{self.bucket}' ({e}); "
+                f"image delivery will fall back to inline base64."
+            )
 
     async def upload_image(
         self, session_id: str, content: bytes, content_type: str

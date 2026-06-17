@@ -8,11 +8,14 @@ marked with [[TASK_READY]].
 This module is stateless - the orchestrator owns the conversation history.
 """
 import base64
+import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Dict, Optional
 from openai import OpenAI
+
+logger = logging.getLogger(__name__)
 
 READY_MARKER = "[[TASK_READY]]"
 
@@ -93,11 +96,17 @@ def prepare_vision_image_url(
     reachable endpoint or use the provider's Files API. Set S3_ENDPOINT to a reachable
     address accordingly.
 
-    Fallback: when no store is configured, returns an inline base64 data URL (works for
-    small images only).
+    Fallback: when no store is configured — or when the store errors (unreachable
+    endpoint, upload failure, etc.) — returns an inline base64 data URL. That keeps small
+    images working, and emits a loud warning so a large-image failure on the fallback
+    stays diagnosable rather than surfacing later as a confusing vision-API 400.
     """
     if storage_client is None:
-        storage_client = _build_storage_client()
+        try:
+            storage_client = _build_storage_client()
+        except Exception as e:
+            logger.warning(f"Could not initialise object store ({e}); using inline base64.")
+            storage_client = None
     if storage_client is None:
         return image_to_data_url(image_path)
 
@@ -107,13 +116,23 @@ def prepare_vision_image_url(
     try:
         asyncio.get_running_loop()
     except RuntimeError:
+        pass  # no running loop — safe to drive the async upload to completion below
+    else:
+        # Called from within an async context (e.g. the server path): the caller should
+        # await storage_client.upload_image directly and pass the URL into build_initial_history.
+        raise RuntimeError(
+            "prepare_vision_image_url() called from an async context; "
+            "await storage_client.upload_image(...) and pass image_url= instead."
+        )
+
+    try:
         return asyncio.run(storage_client.upload_image(session_id, raw, content_type))
-    # Called from within an async context (e.g. the server path): the caller should
-    # await storage_client.upload_image directly and pass the URL into build_initial_history.
-    raise RuntimeError(
-        "prepare_vision_image_url() called from an async context; "
-        "await storage_client.upload_image(...) and pass image_url= instead."
-    )
+    except Exception as e:
+        logger.warning(
+            f"Object store upload failed ({e}); falling back to inline base64. "
+            f"NOTE: large images may exceed the vision API request-size limit on this fallback."
+        )
+        return image_to_data_url(image_path)
 
 
 def clarifier_turn(
